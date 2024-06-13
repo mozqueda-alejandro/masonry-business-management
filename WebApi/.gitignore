@@ -1,0 +1,9 @@
+# Output
+/bin/
+/obj/
+
+# Local
+appsettings.Development.json
+
+# Misc
+*.http
