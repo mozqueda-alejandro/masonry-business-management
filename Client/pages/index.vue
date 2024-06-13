@@ -9,6 +9,15 @@ import DatePicker from "primevue/datepicker";
     <div class="card flex justify-center">
       <DatePicker showIcon :showOnFocus="false"/>
     </div>
+    <UButton
+        icon="i-heroicons-pencil-square"
+        size="sm"
+        color="primary"
+        variant="outline"
+        label="Button"
+        trailing
+    />
+    <UColorModeToggle />
   </div>
 
 </template>
