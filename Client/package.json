@@ -10,7 +10,9 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@primevue/themes": "^4.0.0-rc.1",
     "nuxt": "^3.12.1",
+    "primevue": "^4.0.0-rc.1",
     "vue": "^3.4.27",
     "vue-router": "^4.3.3"
   }
