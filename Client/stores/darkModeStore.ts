@@ -12,7 +12,8 @@ export const useDarkModeStore = defineStore("darkMode", () => {
         },
         set () {
             colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'
-            document.body.classList.toggle("my-app-dark");
+            document.body.classList.remove('my-app-dark');
+            document.documentElement.classList.toggle("my-app-dark");
         }
     })
     document.body.classList.toggle("my-app-dark");

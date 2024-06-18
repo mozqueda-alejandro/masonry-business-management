@@ -113,14 +113,9 @@ const { toggleTheme } = useDarkModeStore();
           <Column field="quantity" header="Quantity"></Column>
         </DataTable>
 
-        <Select v-model="selectedCity" :options="cities" optionLabel="name" placeholder="Select a City"  :highlightOnSelect="false"/>
-
-        <Button label="Button1" rounded @click="toggleTheme">Button</Button>
+        <Button label="Toggle theme" rounded @click="toggleTheme"/>
         <Button label="Link" link />
-        <SplitButton label="Save"></SplitButton>
-        <ToggleButton onLabel="On" offLabel="Off" />
 
-        <InputText type="text" >45345</InputText>
         <DatePicker></DatePicker>
 
       </UDashboardPanelContent>

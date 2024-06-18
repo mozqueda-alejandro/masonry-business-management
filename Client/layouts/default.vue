@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import MegaMenu from 'primevue/megamenu';
+
 const route = useRoute();
 const appConfig = useAppConfig();
 const { isHelpSlideoverOpen } = useDashboard();
@@ -120,6 +122,43 @@ const groups = [{
   }]
 }];
 
+const items = ref([
+  {
+    label: 'Furniture',
+    icon: 'pi pi-box',
+    items: [
+      [
+        {
+          label: 'Living Room',
+          items: [{ label: 'Accessories' }, { label: 'Armchair' }, { label: 'Coffee Table' }, { label: 'Couch' }, { label: 'TV Stand' }]
+        }
+      ],
+      [
+        {
+          label: 'Kitchen',
+          items: [{ label: 'Bar stool' }, { label: 'Chair' }, { label: 'Table' }]
+        },
+        {
+          label: 'Bathroom',
+          items: [{ label: 'Accessories' }]
+        }
+      ],
+      [
+        {
+          label: 'Bedroom',
+          items: [{ label: 'Bed' }, { label: 'Chaise lounge' }, { label: 'Cupboard' }, { label: 'Dresser' }, { label: 'Wardrobe' }]
+        }
+      ],
+      [
+        {
+          label: 'Office',
+          items: [{ label: 'Bookcase' }, { label: 'Cabinet' }, { label: 'Chair' }, { label: 'Desk' }, { label: 'Executive Chair' }]
+        }
+      ]
+    ]
+  }
+]);
+
 </script>
 
 <template>
@@ -143,7 +182,8 @@ const groups = [{
           <UDashboardSearchButton/>
         </template>
 
-        <UDashboardSidebarLinks :links="newLink"/>
+<!--        <UDashboardSidebarLinks :links="newLink"/>-->
+
         <UDivider/>
         <UDashboardSidebarLinks :links="links"/>
 
