@@ -1,23 +1,58 @@
+using Microsoft.EntityFrameworkCore;
+using WebApi.Infrastructure;
+using WebApi.Infrastructure.Masonry;
+using WebApi.Interfaces;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
 
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddEndpointsApiExplorer(); // Swagger/OpenAPI config https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("DevelopmentPolicy", policyBuilder =>
+    {
+        policyBuilder.AllowAnyMethod()
+            .AllowAnyHeader()
+            .WithOrigins("http://localhost:3000")
+            .AllowCredentials();
+    });
+    options.AddPolicy("ProductionPolicy", policyBuilder =>
+    {
+        policyBuilder.AllowAnyMethod()
+            .AllowAnyHeader()
+            .WithOrigins("https://playcardhub.com")
+            .AllowCredentials();
+    });
+});
+
+var connectionString = builder.Configuration.GetConnectionString("Masonry");
+builder.Services.AddDbContext<AppDbContext>(options =>
+{
+    options.UseNpgsql(connectionString)
+        .UseSnakeCaseNamingConvention();
+});
+builder.Services.AddScoped<IBlockRepository, BlockRepository>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+app.UseHttpsRedirection();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    app.UseCors("DevelopmentPolicy");
+}
+else
+{
+    app.UseCors("ProductionPolicy");
 }
 
 app.UseAuthorization();
-
 app.MapControllers();
-
 app.Run();
