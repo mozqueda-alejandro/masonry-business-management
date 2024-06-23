@@ -8,18 +8,32 @@ namespace WebApi.Controllers
     [Route("[controller]")]
     public class MaterialsController : ControllerBase
     {
-        private readonly IBlockRepository _blockRepository;
+        private readonly IBlockService _blockService;
 
-        public MaterialsController(IBlockRepository blockRepository)
+        public MaterialsController(IBlockService blockService)
         {
-            _blockRepository = blockRepository;
+            _blockService = blockService;
         }
-
-        [HttpGet(Name = "GetBlockColors")]
-        public async Task<ActionResult<List<BlockColor>>> Get()
+        
+        [HttpGet]
+        public async Task<ActionResult<List<BlockColor>>> GetBlockColors()
         {
-            var colors = await _blockRepository.GetBlockColors();
+            var colors = await _blockService.GetBlockColors();
             return Ok(colors);
+        }
+        
+        [HttpPost]
+        public async Task<ActionResult> PostBlockColor(BlockColor blockColor)
+        {
+            // Add block color to database if it doesn't already exist
+            var existingColor = await _blockService.GetBlockColors();
+            if (existingColor.Any(c => c.Name.Equals(blockColor.Name, StringComparison.CurrentCultureIgnoreCase)))
+            {
+                return BadRequest("Color already exists");
+            }
+            
+            await _blockService.AddBlockColor(blockColor);
+            return Ok();
         }
     }
 }

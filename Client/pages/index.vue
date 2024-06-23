@@ -1,12 +1,10 @@
 <script setup lang="ts">
 import Button from "primevue/button";
 import DataTable from "primevue/datatable";
-import Select from "primevue/select";
 import Column from "primevue/column";
-import InputText from "primevue/inputtext";
 import DatePicker from "primevue/datepicker";
-import SplitButton from 'primevue/splitbutton';
-import ToggleButton from 'primevue/togglebutton';
+import { useDarkModeStore } from "~/stores/darkModeStore";
+import { storeToRefs } from 'pinia'
 
 
 const { isNotificationsSlideoverOpen } = useDashboard()
@@ -56,10 +54,9 @@ const cities = [
   { name: 'Vienna', code: 'VIE' }
 ];
 
-let selectedCity = ref('');
-
-import { useDarkModeStore } from "~/stores/darkModeStore";
-const { toggleTheme } = useDarkModeStore();
+// Dark Mode
+const store = useDarkModeStore();
+const { isDark } = storeToRefs(store);
 
 </script>
 
@@ -68,52 +65,29 @@ const { toggleTheme } = useDarkModeStore();
     <UDashboardPanel grow>
       <UDashboardNavbar title="Home">
         <template #right>
-          <UTooltip
-              text="Notifications"
-              :shortcuts="['N']"
-          >
-            <UButton
-                color="gray"
-                variant="ghost"
-                square
-                @click="isNotificationsSlideoverOpen = true"
-            >
-              <UChip
-                  color="red"
-                  inset
-              >
-                <UIcon
-                    name="i-heroicons-bell"
-                    class="w-5 h-5"
-                />
+          <UTooltip text="Notifications" :shortcuts="['N']">
+            <UButton color="gray" variant="ghost" square @click="isNotificationsSlideoverOpen = true">
+              <UChip color="red" inset>
+                <UIcon name="i-heroicons-bell" class="w-5 h-5"/>
               </UChip>
             </UButton>
           </UTooltip>
 
           <UDropdown :items="items">
-            <UButton
-                icon="i-heroicons-plus"
-                size="md"
-                class="ml-1.5 rounded-full"
-            />
+            <UButton icon="i-heroicons-plus" size="md" class="ml-1.5 rounded-full"/>
           </UDropdown>
         </template>
       </UDashboardNavbar>
 
       <UDashboardPanelContent>
-        <DataTable
-            scrollable
-            scrollHeight="200px"
-            tableStyle="min-width: 60rem"
-            :value=state.products
-        >
+        <DataTable scrollable scrollHeight="200px" tableStyle="min-width: 60rem" :value=state.products>
           <Column field="code" header="Code"></Column>
           <Column field="name" header="Name"></Column>
           <Column field="category" header="Category"></Column>
           <Column field="quantity" header="Quantity"></Column>
         </DataTable>
 
-        <Button label="Toggle theme" rounded @click="toggleTheme"/>
+        <Button label="Toggle theme" rounded @click="isDark = !isDark"/>
         <Button label="Link" link />
 
         <DatePicker></DatePicker>

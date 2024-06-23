@@ -10,5 +10,10 @@ public class BlockColor
     public int Id { get; set; }
     
     [MaxLength(64)]
-    public string? Name { get; set; }
+    public string Name { get; init; }
+    
+    public BlockColor(string name)
+    {
+        Name = name;
+    }
 }

@@ -2,10 +2,8 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 
 export const useDarkModeStore = defineStore("darkMode", () => {
-    const isDarkPreferred = true; // use local storage to save the theme
-    document.body.classList.toggle("my-app-dark");
-
     const colorMode = useColorMode()
+
     const isDark = computed({
         get () {
             return colorMode.value === 'dark'
@@ -16,11 +14,12 @@ export const useDarkModeStore = defineStore("darkMode", () => {
             document.documentElement.classList.toggle("my-app-dark");
         }
     })
-    document.body.classList.toggle("my-app-dark");
 
-    function toggleTheme() {
-        isDark.value = !isDark.value;
+    function initTheme() {
+        const isDarkPreferred = true; // use local storage to save the theme
+        document.documentElement.classList.toggle("my-app-dark");
     }
 
-    return { isDark, toggleTheme }
+    initTheme()
+    return { isDark }
 });
