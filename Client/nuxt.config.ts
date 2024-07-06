@@ -2,6 +2,9 @@
 export default defineNuxtConfig({
   devtools: { enabled: true },
   extends: ["@nuxt/ui-pro"],
+  imports: {
+    dirs: ['types/*.ts', 'store/*.ts', 'types/**/*.ts'],
+  },
   modules: ["@nuxt/ui", "@pinia/nuxt"],
   runtimeConfig: {
     public: {

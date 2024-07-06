@@ -8,9 +8,9 @@ export default defineNuxtPlugin((nuxtApp) => {
         ripple: true,
         theme: {
             options: {
-                darkModeSelector: ".my-app-dark"
+                darkModeSelector: ".dark-mode"
             },
-            preset: CustomPreset
+            preset: Noir
         }
     });
 });

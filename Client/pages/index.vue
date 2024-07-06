@@ -3,9 +3,6 @@ import Button from "primevue/button";
 import DataTable from "primevue/datatable";
 import Column from "primevue/column";
 import DatePicker from "primevue/datepicker";
-import { useDarkModeStore } from "~/stores/darkModeStore";
-import { storeToRefs } from 'pinia'
-
 
 const { isNotificationsSlideoverOpen } = useDashboard()
 
@@ -36,24 +33,6 @@ let state = {
   ]
 };
 
-const cities = [
-  { name: 'New York', code: 'NY' },
-  { name: 'Rome', code: 'RM' },
-  { name: 'London', code: 'LDN' },
-  { name: 'Istanbul', code: 'IST' },
-  { name: 'Paris', code: 'PRS' },
-  { name: 'Barcelona', code: 'BCN' },
-  { name: 'Berlin', code: 'BLN' },
-  { name: 'Brasilia', code: 'BSB' },
-  { name: 'Budapest', code: 'BUD' },
-  { name: 'Buenos Aires', code: 'BUE' },
-  { name: 'Prague', code: 'PRG' },
-  { name: 'Warsaw', code: 'WAW' },
-  { name: 'Los Angeles', code: 'LAX' },
-  { name: 'Tokyo', code: 'TYO' },
-  { name: 'Vienna', code: 'VIE' }
-];
-
 // Dark Mode
 const store = useDarkModeStore();
 const { isDark } = storeToRefs(store);
@@ -80,12 +59,14 @@ const { isDark } = storeToRefs(store);
       </UDashboardNavbar>
 
       <UDashboardPanelContent>
-        <DataTable scrollable scrollHeight="200px" tableStyle="min-width: 60rem" :value=state.products>
-          <Column field="code" header="Code"></Column>
-          <Column field="name" header="Name"></Column>
-          <Column field="category" header="Category"></Column>
-          <Column field="quantity" header="Quantity"></Column>
-        </DataTable>
+        <div class="card m-8">
+          <DataTable scrollable scrollHeight="200px" tableStyle="min-width: 60rem" :value=state.products>
+            <Column field="code" header="Code"></Column>
+            <Column field="name" header="Name"></Column>
+            <Column field="category" header="Category"></Column>
+            <Column field="quantity" header="Quantity"></Column>
+          </DataTable>
+        </div>
 
         <Button label="Toggle theme" rounded @click="isDark = !isDark"/>
         <Button label="Link" link />

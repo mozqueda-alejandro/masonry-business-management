@@ -1,8 +1,5 @@
 <script setup lang="ts">
-import MegaMenu from 'primevue/megamenu';
-
 const route = useRoute();
-const appConfig = useAppConfig();
 const { isHelpSlideoverOpen } = useDashboard();
 
 const newLink = [{
@@ -21,24 +18,16 @@ const links = computed(() => [{
     shortcuts: ['G', 'H']
   }
 }, {
-  id: 'inbox',
-  label: 'Inbox',
-  icon: 'i-heroicons-inbox',
-  to: '/inbox',
-  badge: '4',
-  tooltip: {
-    text: 'Inbox',
-    shortcuts: ['G', 'I']
-  }
-}, {
   id: "jobs",
   label: "Job Management",
   icon: "i-heroicons-building-office",
-  to: "/jobs",
   defaultOpen: route.path.startsWith('/jobs'),
   children: [{
     label: "Jobs",
     to: "/jobs",
+    click: () => {
+      console.log('clicked job');
+    }
   }, {
     label: "Estimates",
     to: "/jobs/estimates"
@@ -48,9 +37,6 @@ const links = computed(() => [{
   }, {
     label: "Clients",
     to: "/jobs/clients"
-  }, {
-    label: "Inventory",
-    to: "/jobs/inventory"
   }]
 }, {
   id: "purchases",
@@ -75,9 +61,6 @@ const links = computed(() => [{
   }, {
     label: 'Timesheets',
     to: '/payroll/timesheets'
-  }, {
-    label: 'Tax Forms',
-    to: '/payroll/taxforms'
   }],
   tooltip: {
     text: 'Payroll',
@@ -101,8 +84,7 @@ const footerLinks = [{
 }, {
   label: 'Settings',
   icon: 'i-heroicons-cog-8-tooth',
-  to: '/settings',
-
+  to: '/settings'
 }];
 
 const groups = [{
@@ -115,63 +97,16 @@ const groups = [{
   commands: [{
     id: 'source',
     label: 'View page source',
-    icon: 'i-simple-icons-github',
-    click: () => {
-      window.open(`https://github.com/nuxt-ui-pro/dashboard/blob/main/pages${ route.path === '/' ? '/index' : route.path }.vue`, '_blank');
-    }
+    icon: 'i-simple-icons-github'
   }]
 }];
-
-const items = ref([
-  {
-    label: 'Furniture',
-    icon: 'pi pi-box',
-    items: [
-      [
-        {
-          label: 'Living Room',
-          items: [{ label: 'Accessories' }, { label: 'Armchair' }, { label: 'Coffee Table' }, { label: 'Couch' }, { label: 'TV Stand' }]
-        }
-      ],
-      [
-        {
-          label: 'Kitchen',
-          items: [{ label: 'Bar stool' }, { label: 'Chair' }, { label: 'Table' }]
-        },
-        {
-          label: 'Bathroom',
-          items: [{ label: 'Accessories' }]
-        }
-      ],
-      [
-        {
-          label: 'Bedroom',
-          items: [{ label: 'Bed' }, { label: 'Chaise lounge' }, { label: 'Cupboard' }, { label: 'Dresser' }, { label: 'Wardrobe' }]
-        }
-      ],
-      [
-        {
-          label: 'Office',
-          items: [{ label: 'Bookcase' }, { label: 'Cabinet' }, { label: 'Chair' }, { label: 'Desk' }, { label: 'Executive Chair' }]
-        }
-      ]
-    ]
-  }
-]);
 
 </script>
 
 <template>
   <UDashboardLayout>
-    <UDashboardPanel
-        :width="250"
-        :resizable="{ min: 200, max: 300 }"
-        collapsible
-    >
-      <UDashboardNavbar
-          class="!border-transparent"
-          :ui="{ left: 'flex-1' }"
-      >
+    <UDashboardPanel :width="250" :resizable="{ min: 200, max: 300 }" collapsible>
+      <UDashboardNavbar class="!border-transparent" :ui="{ left: 'flex-1' }">
         <template #left>
           <CompanyDropdown/>
         </template>
@@ -179,7 +114,7 @@ const items = ref([
 
       <UDashboardSidebar>
         <template #header>
-          <UDashboardSearchButton/>
+          <UDashboardSearchButton hide-color-mode/>
         </template>
 
 <!--        <UDashboardSidebarLinks :links="newLink"/>-->
