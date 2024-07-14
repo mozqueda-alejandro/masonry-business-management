@@ -12,7 +12,7 @@ const teams = [{
 }, {
   label: 'NuxtLabs',
   avatar: {
-    src: 'https://avatars.githubusercontent.com/u/62017400?s=200&v=4'
+    src: brandmark
   },
   click: () => {
     team.value = teams[1]

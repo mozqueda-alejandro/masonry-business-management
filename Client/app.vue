@@ -29,6 +29,8 @@ useSeoMeta({
   twitterImage: 'https://dashboard-template.nuxt.dev/social-card.png',
   twitterCard: 'summary_large_image'
 })
+
+const darkModeStore = useDarkModeStore();
 </script>
 
 <template>

@@ -64,7 +64,7 @@ const items = computed(() => [
       >
         <template #leading>
           <UAvatar
-              src="https://avatars.githubusercontent.com/u/739984?v=4"
+              src=""
               size="2xs"
           />
         </template>

@@ -1,25 +1,8 @@
-import type { Avatar } from '#ui/types'
+export { };
 
-interface User {
-    id: number
-    name: string
-    email: string
-    avatar?: Avatar
-    status: 'subscribed' | 'unsubscribed' | 'bounced'
-    location: string
+declare global {
+    interface SelectOption {
+        name: string,
+        value: any
+    }
 }
-
-interface Notification {
-    id: number
-    unread?: boolean
-    sender: User
-    body: string
-    date: string
-}
-
-enum Screen {
-    Estimates,
-    NewEstimate
-}
-
-export { User, Notification, Screen };

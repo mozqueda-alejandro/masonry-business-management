@@ -45,6 +45,11 @@ export default <Partial<Config>>{
                     950: "#09090b"
                 }
             }
+            // ,
+            // transitionProperty: {
+            //     'color': 'height',
+            //     'background-color': 'margin, padding',
+            // }
         }
     }
 };

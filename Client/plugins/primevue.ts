@@ -1,6 +1,8 @@
 import PrimeVue from "primevue/config";
-import { definePreset } from "@primevue/themes";
 import Aura from "@primevue/themes/aura";
+import { definePreset } from "@primevue/themes";
+import "primeicons/primeicons.css"; // https://primevue.org/icons/
+
 
 export default defineNuxtPlugin((nuxtApp) => {
     nuxtApp.vueApp.use(PrimeVue, {

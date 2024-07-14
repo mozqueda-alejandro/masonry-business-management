@@ -1,5 +1,15 @@
 <script setup lang="ts">
-import New from '@/components/estimates/New.vue';
+import { toRaw } from "vue";
+import { storeToRefs } from "pinia";
+
+
+const store = useGlobalNavigationStore();
+const { currentComponent, keepAliveComponents } = storeToRefs(store);
+
+// delay 3 seconds
+setTimeout(() => {
+  console.log("Keep alive components: ", keepAliveComponents.value);
+}, 1000);
 </script>
 
 <template>
@@ -9,7 +19,9 @@ import New from '@/components/estimates/New.vue';
       </UDashboardNavbar>
 
       <UDashboardPanelContent>
-        <New/>
+        <KeepAlive :include="keepAliveComponents">
+          <component :is="currentComponent"/>
+        </KeepAlive>
       </UDashboardPanelContent>
 
     </UDashboardPanel>

@@ -1,6 +1,13 @@
 <script setup lang="ts">
-const route = useRoute();
+import { NavigationCommand } from "~/types/enums";
+
 const { isHelpSlideoverOpen } = useDashboard();
+
+const route = useRoute();
+
+const store = useGlobalNavigationStore();
+const { changeView } = store;
+
 
 const newLink = [{
   id: 'new',
@@ -30,7 +37,10 @@ const links = computed(() => [{
     }
   }, {
     label: "Estimates",
-    to: "/jobs/estimates"
+    to: "/jobs/estimates",
+    click: () => {
+      changeView(NavigationCommand.Estimates);
+    }
   }, {
     label: "Invoices",
     to: "/jobs/invoices"
