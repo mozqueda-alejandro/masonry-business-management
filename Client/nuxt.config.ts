@@ -6,16 +6,20 @@ export default defineNuxtConfig({
         { path: "~/components/estimates", extensions: [".vue"] },
         "~/components"
     ],
+    css: ['~/assets/css/main.css'],
     devtools: { enabled: true },
     extends: ["@nuxt/ui-pro"],
     imports: {
         dirs: ["types/*.ts", "store/*.ts", "types/**/*.ts"]
     },
-    modules: ["@nuxt/ui", "@pinia/nuxt"],
+    modules: ["@nuxt/ui", "@pinia/nuxt", "nuxt-svgo", "@nuxt/image"],
     runtimeConfig: {
         public: {
             baseURL: process.env.BASE_URL
         }
     },
-    ssr: false
+    ssr: false,
+    svgo: {
+        componentPrefix: 'I'
+    },
 });

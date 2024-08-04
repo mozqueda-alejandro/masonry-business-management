@@ -1,5 +1,6 @@
-import PrimeVue from "primevue/config";
 import Aura from "@primevue/themes/aura";
+import PrimeVue from "primevue/config";
+import Tooltip from 'primevue/tooltip';
 import { definePreset } from "@primevue/themes";
 import "primeicons/primeicons.css"; // https://primevue.org/icons/
 
@@ -15,6 +16,8 @@ export default defineNuxtPlugin((nuxtApp) => {
             preset: Noir
         }
     });
+
+    nuxtApp.vueApp.directive('tooltip', Tooltip);
 });
 
 const CustomPreset = definePreset(Aura, {

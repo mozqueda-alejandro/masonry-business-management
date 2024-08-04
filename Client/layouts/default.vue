@@ -1,45 +1,40 @@
 <script setup lang="ts">
-import { NavigationCommand } from "~/types/enums";
+
+import { EstimatesRequests } from "~/types/constants";
 
 const { isHelpSlideoverOpen } = useDashboard();
-
+const { changeView } = useGlobalNavigationStore();
 const route = useRoute();
-
-const store = useGlobalNavigationStore();
-const { changeView } = store;
 
 
 const newLink = [{
-  id: 'new',
-  label: 'New',
-  icon: 'i-heroicons-plus'
-}]
+  id: "new",
+  label: "New",
+  icon: "i-heroicons-plus"
+}];
 
 const links = computed(() => [{
-  id: 'home',
-  label: 'Home',
-  icon: 'i-heroicons-home',
-  to: '/',
+  id: "home",
+  label: "Home",
+  icon: "i-heroicons-home",
+  to: "/",
   tooltip: {
-    text: 'Home',
-    shortcuts: ['G', 'H']
+    text: "Home",
+    shortcuts: ["G", "H"]
   }
 }, {
   id: "jobs",
   label: "Job Management",
   icon: "i-heroicons-building-office",
-  defaultOpen: route.path.startsWith('/jobs'),
+  defaultOpen: route.path.startsWith("/jobs"),
   children: [{
     label: "Jobs",
-    to: "/jobs",
-    click: () => {
-      console.log('clicked job');
-    }
+    to: "/jobs"
   }, {
     label: "Estimates",
     to: "/jobs/estimates",
     click: () => {
-      changeView(NavigationCommand.Estimates);
+      changeView(EstimatesRequests.Estimates);
     }
   }, {
     label: "Invoices",
@@ -52,7 +47,7 @@ const links = computed(() => [{
   id: "purchases",
   label: "Purchases",
   icon: "i-heroicons-currency-dollar",
-  defaultOpen: route.path.startsWith('/purchases'),
+  defaultOpen: route.path.startsWith("/purchases"),
   children: [{
     label: "Bills",
     to: "/purchases/bills"
@@ -61,20 +56,20 @@ const links = computed(() => [{
     to: "/purchases/vendors"
   }]
 }, {
-  id: 'payroll',
-  label: 'Payroll',
-  icon: 'i-heroicons-user-group',
-  defaultOpen: route.path.startsWith('/payroll'),
+  id: "payroll",
+  label: "Payroll",
+  icon: "i-heroicons-user-group",
+  defaultOpen: route.path.startsWith("/payroll"),
   children: [{
-    label: 'Employees',
-    to: '/payroll/employees'
+    label: "Employees",
+    to: "/payroll/employees"
   }, {
-    label: 'Timesheets',
-    to: '/payroll/timesheets'
+    label: "Timesheets",
+    to: "/payroll/timesheets"
   }],
   tooltip: {
-    text: 'Payroll',
-    shortcuts: ['G', 'P']
+    text: "Payroll",
+    shortcuts: ["G", "P"]
   }
 }, {
   id: "reports",
@@ -82,32 +77,32 @@ const links = computed(() => [{
   to: "/reports",
   icon: "i-heroicons-chart-pie",
   tooltip: {
-    text: 'Reports',
-    shortcuts: ['G', 'R']
+    text: "Reports",
+    shortcuts: ["G", "R"]
   }
 }]);
 
 const footerLinks = [{
-  label: 'Material Library',
-  icon: 'i-heroicons-book-open',
-  to: '/materials'
+  label: "Material Library",
+  icon: "i-heroicons-book-open",
+  to: "/materials"
 }, {
-  label: 'Settings',
-  icon: 'i-heroicons-cog-8-tooth',
-  to: '/settings'
+  label: "Settings",
+  icon: "i-heroicons-cog-8-tooth",
+  to: "/settings"
 }];
 
 const groups = [{
-  key: 'links',
-  label: 'Go to',
+  key: "links",
+  label: "Go to",
   commands: links.value.map(link => ({ ...link, shortcuts: link.tooltip?.shortcuts }))
 }, {
-  key: 'code',
-  label: 'Code',
+  key: "code",
+  label: "Code",
   commands: [{
-    id: 'source',
-    label: 'View page source',
-    icon: 'i-simple-icons-github'
+    id: "source",
+    label: "View page source",
+    icon: "i-simple-icons-github"
   }]
 }];
 
@@ -127,7 +122,7 @@ const groups = [{
           <UDashboardSearchButton hide-color-mode/>
         </template>
 
-<!--        <UDashboardSidebarLinks :links="newLink"/>-->
+        <!--        <UDashboardSidebarLinks :links="newLink"/>-->
 
         <UDivider/>
         <UDashboardSidebarLinks :links="links"/>

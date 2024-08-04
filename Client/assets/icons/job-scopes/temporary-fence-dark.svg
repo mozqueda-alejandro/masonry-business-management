@@ -1,0 +1,16 @@
+<svg width="303" height="240" viewBox="0 0 303 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect x="5" y="24" width="48" height="216" fill="#D6D6D6"/>
+<path d="M33 0H81L53 24H5L33 0Z" fill="#FDFDFD"/>
+<path d="M53 24L81 0V216L53 240V24Z" fill="#ADACAC"/>
+<rect x="227" y="24" width="48" height="216" fill="#D6D6D6"/>
+<path d="M275 24L303 0V216L275 240V24Z" fill="#ADACAC"/>
+<path d="M255 0H303L275 24H227L255 0Z" fill="#FDFDFD"/>
+<line x1="270.5" y1="235" x2="270.5" y2="216" stroke="#FDFDFD" stroke-width="9"/>
+<path d="M275 38L270 42.0005V220L275 216V38Z" fill="#ADACAC"/>
+<rect y="42" width="270" height="178" fill="#D6D6D6"/>
+<path d="M5 38L0 42H270L275 38H5Z" fill="#FDFDFD"/>
+<line x1="265.5" y1="220" x2="265.5" y2="42" stroke="#FDFDFD" stroke-width="9"/>
+<line x1="48.5" y1="38" x2="48.5" y2="24" stroke="#FDFDFD" stroke-width="9"/>
+<line x1="270.5" y1="38" x2="270.5" y2="24" stroke="#FDFDFD" stroke-width="9"/>
+<line x1="48.5" y1="235" x2="48.5" y2="220" stroke="#FDFDFD" stroke-width="9"/>
+</svg>

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-
 </script>
 
 <template>
@@ -9,6 +8,7 @@
       </UDashboardNavbar>
 
       <UDashboardPanelContent>
+
 
       </UDashboardPanelContent>
 

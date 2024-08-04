@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import Button from "primevue/button";
 import Select from "primevue/select";
-import { defineModel } from "vue";
 
 
 const modelValue = defineModel();
@@ -32,8 +31,8 @@ function createNewItem() {
 
 const sortedOptions = computed(() => {
   // sort attrs["options"] by the string attribute "name"
-  const options = attrs["options"] as { name: string }[];
-  return options.sort((a, b) => a.name.localeCompare(b.name));
+  // const options = attrs["options"] as { name: string }[];
+  // return options.sort((a, b) => a.name.localeCompare(b.name));
 });
 
 const lastHoveredOption = ref();
@@ -53,7 +52,7 @@ function onNewItemMouseLeave() {
 </script>
 
 <template>
-  <Select v-model="sortedOptions" v-bind="$attrs" ref="pSelect" :optionLabel="optionLabel" :optionValue="optionValue">
+  <Select v-model="modelValue" v-bind="$attrs" ref="pSelect" :optionLabel="optionLabel" :optionValue="optionValue">
     <template #header>
       <div class="flex items-center">
         <Button @click="createNewItem" severity="success" text fluid

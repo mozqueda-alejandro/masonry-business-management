@@ -1,0 +1,7 @@
+.sub-description {
+    color: var(--p-zinc-600);
+}
+
+.dark-mode .sub-description {
+    color: var(--p-zinc-400);
+}

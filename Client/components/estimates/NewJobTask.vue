@@ -1,58 +1,54 @@
 <script setup lang="ts">
 import { watch } from "vue";
-
 import Button from "primevue/button";
 import Checkbox from "primevue/checkbox";
 import InputGroup from 'primevue/inputgroup';
 import InputGroupAddon from 'primevue/inputgroupaddon';
 import InputNumber from "primevue/inputnumber";
-import InputText from "primevue/inputtext";
 import Select from "primevue/select"
 import SelectButton from 'primevue/selectbutton';
 import ToggleSwitch from "primevue/toggleswitch";
 
-import { NavigationCommand } from "~/types/enums";
-const globalNavigationStore = useGlobalNavigationStore();
-const { changeView } = globalNavigationStore;
-
-
+import { EstimatesRequests } from "~/types/constants";
+const { changeView } = useGlobalNavigationStore();
 const { $api } = useNuxtApp();
+
 
 enum LengthMeasure {
   Block,
   Feet
 }
 
-const lengthMeasure = ref<LengthMeasure | null>(null);
-const lengthInBlock = ref<number>();
-const lengthInFeet = ref<number>();
+const lengthMeasure = ref<LengthMeasure>();
+const lengthBlocks = ref<number>();
+const lengthFt = ref<number>();
 
-watch(lengthInBlock, (blocks) => {
+watch(lengthBlocks, (blocks) => {
   if (lengthMeasure.value === LengthMeasure.Feet) return;
-  if (isNumber(blocks) && blocks) {
+  if (blocks && isNumber(blocks)) {
     lengthMeasure.value = LengthMeasure.Block;
-    lengthInFeet.value = blocks * 4 / 3;
+    lengthFt.value = blocks * 4 / 3;
   } else {
-    lengthMeasure.value = null;
-    lengthInFeet.value = undefined;
+    lengthMeasure.value = undefined;
+    lengthFt.value = undefined;
   }
 });
-watch(lengthInFeet, (feet) => {
+watch(lengthFt, (feet) => {
   if (lengthMeasure.value === LengthMeasure.Block) return;
-  if (isNumber(feet) && feet) {
+  if (feet && isNumber(feet)) {
     lengthMeasure.value = LengthMeasure.Feet;
-    lengthInBlock.value = Math.ceil(feet * 3 / 4);
+    lengthBlocks.value = Math.ceil(feet * 3 / 4);
   } else {
-    lengthMeasure.value = null;
-    lengthInBlock.value = undefined;
+    lengthMeasure.value = undefined;
+    lengthBlocks.value = undefined;
   }
 });
 
 function isInputDisabled(measure: LengthMeasure) {
-  return lengthMeasure.value !== null && lengthMeasure.value !== measure;
+  return lengthMeasure.value !== undefined && lengthMeasure.value !== measure;
 }
 
-const selectedHeight = ref<number>();
+const selectedHeightCourses = ref<number>();
 const heights = ref(Array.from({ length: 12 }, (_, i) => ({
   name: (i + 1).toString(),
   value: i + 1
@@ -65,6 +61,9 @@ const topFinishes = ref([
   { name: "Two Inch Cap", value: "two-inch-cap" },
   { name: "None", value: "none" }
 ]);
+
+const segments = ref<number>();
+const backpoints = ref<number>();
 
 type BlockWidthOption = SelectOption & { disabled: boolean };
 const selectedBlockWidth = ref<number>();
@@ -143,10 +142,41 @@ function createJobTask() {
 function isNumber(value: any) {
   return !isNaN(parseFloat(value)) && isFinite(value);
 }
+
+const initialState: PartialWithUndefined<InstallationType> = {
+  lengthBlocks: undefined,
+  lengthFt: undefined,
+  heightCourses: undefined,
+  topFinish: undefined,
+  segments: undefined,
+  backPoints: undefined,
+  blockWidth: undefined,
+  blockType: undefined,
+  blockColor: undefined,
+  premixColor: undefined,
+  specialBlockWidth: undefined,
+  specialBlockType: undefined,
+  specialBlockColor: undefined,
+  specialLengthBlocks: undefined,
+  specialLengthFt: undefined,
+  specialBlockCourses: undefined,
+  footingType: undefined,
+  footingWidthFt: undefined,
+  footingDepthFt: undefined,
+  horizontalInFooting: undefined,
+  verticalSpacing: undefined,
+  horizontalOnWall: undefined,
+  embedmentDepth: undefined,
+  existingDowels: undefined,
+};
+
+let selected = reactive(initialState);
+
 </script>
 
 <template>
   <form class="flex flex-col" v-on:submit.prevent="createJobTask">
+    <Button label="Back" outlined @click="changeView(EstimatesRequests.NewEstimate)" class="w-40"/>
     <UDivider/>
     <div class="form-section">
       <div class="form-description">
@@ -160,13 +190,13 @@ function isNumber(value: any) {
           <label class="grid-l">Length</label>
           <div class="grid-r">
             <InputGroup class="flex-1">
-              <InputNumber inputId="lengthBlock" v-model="lengthInBlock" :prefix="isInputDisabled(LengthMeasure.Block) ? '~ ' : ''"
+              <InputNumber inputId="lengthBlock" v-model="lengthBlocks" :prefix="isInputDisabled(LengthMeasure.Block) ? '~ ' : ''"
                            :disabled="isInputDisabled(LengthMeasure.Block)" :min="1" :max="900" fluid/>
               <InputGroupAddon>Blocks</InputGroupAddon>
             </InputGroup>
             <UDivider label="OR" orientation="vertical"/>
             <InputGroup class="flex-1">
-              <InputNumber inputId="lengthFeet" v-model="lengthInFeet"
+              <InputNumber inputId="lengthFeet" v-model="lengthFt"
                            :disabled="isInputDisabled(LengthMeasure.Feet)" :min="32" :max="1200" fluid
                            :maxFractionDigits="2" class="flex-1"/>
               <InputGroupAddon>ft.</InputGroupAddon>
@@ -174,7 +204,7 @@ function isNumber(value: any) {
           </div>
           <label class="grid-l">Height</label>
           <div class="grid-r">
-            <Select v-model="selectedHeight" :options="heights" placeholder="Courses" optionLabel="name" showClear class="flex-1"/>
+            <Select v-model="selectedHeightCourses" :options="heights" placeholder="# Courses" optionLabel="name" showClear class="flex-1"/>
           </div>
           <label class="grid-l">Top Finish</label>
           <div class="grid-r">
@@ -182,11 +212,11 @@ function isNumber(value: any) {
           </div>
           <label class="grid-l">Segments</label>
           <div class="grid-r">
-            <InputNumber v-model="value" class="flex-1"/>
+            <InputNumber v-model="segments" class="flex-1"/>
           </div>
           <label class="grid-l">Backpoints</label>
           <div class="grid-r">
-            <InputNumber v-model="value" class="flex-1"/>
+            <InputNumber v-model="backpoints" class="flex-1"/>
           </div>
         </div>
 
@@ -213,7 +243,7 @@ function isNumber(value: any) {
           </div>
           <label class="grid-l">Block Color</label>
           <div class="grid-r">
-            <CustomSelec v-model="selectedBlockColor" defaultOptions :options="blockColors" :newItemAction="addBlockColor" class="flex-1" />
+            <CustomSelect v-model="selectedBlockColor" defaultOptions :options="blockColors" :newItemAction="addBlockColor" class="flex-1" />
           </div>
           <label class="grid-l">Premix Color</label>
           <div class="grid-r">
@@ -258,7 +288,7 @@ function isNumber(value: any) {
             </div>
             <label class="grid-l">Special Block Color</label>
             <div class="grid-r">
-              <Select class="flex-1"/>
+              <Select v-model="blockColors" class="flex-1"/>
             </div>
           </div>
 
@@ -323,7 +353,7 @@ function isNumber(value: any) {
 
     <div class="flex flex-row-reverse gap-4">
       <Button label="Save" icon="pi pi-check" type="Submit" />
-      <Button label="Cancel" outlined @click="changeView(NavigationCommand.NewEstimate)"/>
+      <Button label="Cancel" outlined @click="changeView(EstimatesRequests.NewEstimate)"/>
     </div>
 
   </form>
@@ -340,6 +370,7 @@ function isNumber(value: any) {
   .form-description {
     min-width: 300px;
     flex-shrink: 0;
+    width: 420px;
   }
 
   .form-inputs {
@@ -385,14 +416,6 @@ function isNumber(value: any) {
     justify-content: center;
     gap: 12px;
   }
-}
-
-.sub-description {
-  color: var(--p-zinc-600);
-}
-
-.dark-mode .sub-description {
-  color: var(--p-zinc-400);
 }
 
 .slide-fade-enter-active, .slide-fade-leave-active {

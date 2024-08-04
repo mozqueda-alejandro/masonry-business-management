@@ -1,100 +1,143 @@
 import { defineStore } from "pinia";
-import { LazyEstimates, LazyNewEstimate, LazyNewJobTask } from "#components";
-import { NavigationCommand } from "~/types/enums";
+import { Estimates, NewEstimate, NewJobTask } from "#components";
+import { initNavigationRequests, EstimatesRequests } from "~/types/constants";
+
+
 import type { Component } from "vue";
 
 
+type ViewMap = Map<string, View>;
+
 interface View {
     component: Component;
-    name?: string;
-    keepAlive?: boolean;
-
-    get path(): string;
-    get defaultComponent(): Component;
-    get keepAliveComponents(): string[];
+    name: string;
+    keepAlive: boolean;
 }
 
-class BaseView {
-    readonly component: Component;
-    readonly name?: string;
-    readonly keepAlive?: boolean;
+interface Page {
+    key: string;
+    path: string;
+    defaultView: View;
+    views: ViewMap;
+    readonly keepAliveComponents: string[];
 
-    protected constructor(component: Component, name?: string, keepAlive?: boolean) {
+    getComponent(name: string): Component;
+}
+
+class ViewImpl implements View {
+    component: Component;
+    name: string;
+    keepAlive: boolean;
+
+    constructor(component: Component, name: string, keepAlive: boolean = false) {
         this.component = component;
-        if (name !== undefined && keepAlive !== undefined) {
-            this.name = name;
-            this.keepAlive = keepAlive;
-        }
+        this.name = name;
+        this.keepAlive = keepAlive;
     }
 }
 
-class EstimateView extends BaseView implements View {
-    static readonly path = "/jobs/estimates";
-    static readonly defaultComponent = LazyEstimates;
-    static keepAliveComponents: string[] = [];
+class PageImpl implements Page {
+    key: string;
+    path: string;
+    defaultView: View;
+    views: ViewMap;
+    readonly keepAliveComponents: string[] = [];
 
-    constructor(component: Component);
-    constructor(component: Component, name: string);
-    constructor(component: Component, name: string, keepAlive: boolean)
-    constructor(component: Component, name?: string, keepAlive?: boolean) {
-        if (name === undefined) {
-            super(component);
-            return;
-        } else if (keepAlive === undefined) {
-            super(component, name, false);
-            return;
-        }
+    constructor(key: string, path: string, defaultView: View, views: ViewMap) {
+        this.key = key;
+        this.path = path;
+        this.defaultView = defaultView;
+        this.views = views;
 
-        super(component, name, keepAlive);
-        if (keepAlive) {
-            EstimateView.keepAliveComponents.push(name);
+        for (const view of views.values()) {
+            if (view.keepAlive) {
+                this.keepAliveComponents.push(view.name);
+            }
         }
     }
 
-    get path() {
-        return EstimateView.path;
+    getComponent(viewName: string): Component {
+        return this.views.get(viewName)?.component || this.defaultView.component;
+    }
+}
+
+class PageBuilder {
+    private key: string = "";
+    private path: string = "";
+    private defaultView: View | null = null;
+    private views: ViewMap = new Map();
+
+    setPageInfo(key: string, path: string): this {
+        this.key = key;
+        this.path = path;
+        return this;
     }
 
-    get defaultComponent() {
-        return EstimateView.defaultComponent;
+    setDefaultComponent(defaultComponent: View): this {
+        this.defaultView = defaultComponent;
+        return this;
     }
 
-    get keepAliveComponents() {
-        return EstimateView.keepAliveComponents;
+    addComponent(view: View): this {
+        this.views.set(view.name, view);
+        return this;
+    }
+
+    build(): Page {
+        if (!this.key || !this.path) throw new Error("Key and path must be set");
+        if (!this.defaultView) throw new Error("Default component must be set");
+
+        return new PageImpl(this.key, this.path, this.defaultView, this.views);
     }
 }
 
 export const useGlobalNavigationStore = defineStore("globalNavigation", () => {
     const route = useRoute();
-    // const currentView = ref<View>();
-    // const currentComponent = computed<Component | undefined>(() => currentView.value?.component);
     const currentComponent = shallowRef<Component | null>(null);
-    const keepAliveComponents = shallowRef<string[]>([]);
+    const keepAliveComponents = ref<string[]>([]);
+    const pages = ref<Page[]>([]);
 
-    const viewsMap: Record<NavigationCommand, View> = {
-        [NavigationCommand.Estimates]: new EstimateView(LazyEstimates, NavigationCommand.Estimates),
-        [NavigationCommand.NewEstimate]: new EstimateView(LazyNewEstimate, NavigationCommand.NewEstimate, true),
-        [NavigationCommand.NewJobTask]: new EstimateView(LazyNewJobTask, NavigationCommand.NewJobTask)
-    };
+    function initPages() {
+        pages.value = [
+            new PageBuilder()
+                .setPageInfo(EstimatesRequests.key(), EstimatesRequests.path())
+                .setDefaultComponent(new ViewImpl(Estimates, EstimatesRequests.Estimates.viewName))
+                .addComponent(new ViewImpl(NewEstimate, EstimatesRequests.NewEstimate.viewName, true))
+                .addComponent(new ViewImpl(NewJobTask, EstimatesRequests.NewJobTask.viewName))
+                .build()
+        ];
 
-    function changeView(command: NavigationCommand) {
-        const newView = viewsMap[command];
-        navigateTo(newView.path);
-        currentComponent.value = newView.component;
-        keepAliveComponents.value = newView.keepAliveComponents;
+        return pages;
     }
 
-    function resolveDefaultComponent() {
-        const view = Object.values(viewsMap).find(view => view.path === route.path);
-        if (view) {
-            currentComponent.value = view.defaultComponent;
-            keepAliveComponents.value = view.keepAliveComponents
+    function changeView(request: NavigationRequest) {
+        console.log("Request- ", request);
+        const page = pages.value.find(p => p.key === request.pageName);
+        if (!page) throw new Error(`Page not found: ${ request }`);
+
+        currentComponent.value = page.getComponent(request.viewName);
+        keepAliveComponents.value = page.keepAliveComponents;
+    }
+
+    function onRouteChange(newPath: string) {
+        const page = pages.value.find(p => p.path === newPath);
+        if (!page) {
+            currentComponent.value = null;
+            keepAliveComponents.value = [];
+            return;
         }
+
+        currentComponent.value = page.defaultView.component;
+        keepAliveComponents.value = page.keepAliveComponents;
     }
 
-    onMounted(() => {
-        resolveDefaultComponent();
-    });
+    function init() {
+        initNavigationRequests();
+        initPages();
+        onRouteChange(route.path);
+    }
 
-    return { changeView, currentComponent, keepAliveComponents };
+    init();
+
+    return { currentComponent, keepAliveComponents, pages, changeView, onRouteChange };
 });
