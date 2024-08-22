@@ -32,9 +32,9 @@ onMounted(() => {
 <template>
   <UDashboardPage>
     <UDashboardPanel grow>
-      <UDashboardNavbar title="Estimates">
+      <UDashboardNavbar title="">
       </UDashboardNavbar>
-      <div class="p-4 px-32 flex-1 flex flex-col overflow-y-auto" ref="el">
+      <div class="p-4 px-12 flex-1 flex flex-col overflow-y-auto" ref="el">
         <KeepAlive :include="keepAliveComponents">
           <component :is="currentComponent"/>
         </KeepAlive>

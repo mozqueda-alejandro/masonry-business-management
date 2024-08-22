@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import type { Component } from "vue";
+import { $dt } from "@primeuix/styled";
+import type { Component } from "vue"; // STANDARD
 
+import Badge from "primevue/badge"; // LIBRARY
 import Button from "primevue/button";
 import ButtonGroup from "primevue/buttongroup";
 import Card from "primevue/card";
 import Checkbox from "primevue/checkbox";
 import Column from "primevue/column";
+import ConfirmDialog from "primevue/confirmdialog";
 import DataTable from "primevue/datatable";
 import DatePicker from "primevue/datepicker";
 import Dialog from "primevue/dialog";
@@ -15,11 +18,22 @@ import InputNumber from "primevue/inputnumber";
 import InputText from "primevue/inputtext";
 import Menu from "primevue/menu";
 import Panel from "primevue/panel";
+import ProgressBar from "primevue/progressbar";
 import Select from "primevue/select";
+import SplitButton from "primevue/splitbutton";
+import ToggleButton from 'primevue/togglebutton';
 import ToggleSwitch from "primevue/toggleswitch";
 
+import Tabs from "primevue/tabs";
+import TabList from "primevue/tablist";
+import Tab from "primevue/tab";
+import TabPanels from "primevue/tabpanels";
+import TabPanel from "primevue/tabpanel";
 
-import {
+import { useConfirm } from "primevue/useconfirm";
+import { useToast } from "primevue/usetoast";
+
+import { // LOCAL
   IJobScopesAddition,
   IJobScopesDemo,
   IJobScopesInstallation,
@@ -27,48 +41,22 @@ import {
   IJobScopesStone,
   IJobScopesTemporaryFence
 } from "#components";
-
-
 import { JobScope } from "~/types/enums";
 import { EstimatesRequests } from "~/types/constants";
 
+// region Init
+
+// Unwrapping reactive values from a store
+// https://masteringpinia.com/blog/ref-vs-reactive-in-stores
+const estimateStore = useEstimateStore();
+const { estimate } = estimateStore;
+const { getJobTask, removeJobTask } = estimateStore;
+
 const { changeView } = useGlobalNavigationStore();
-
-interface Location {
-  id?: number;
-  address: string;
-  city: string;
-  state: string;
-  zip: string;
-}
-
-interface BusinessDetails {
-  name: string;
-  location: Location;
-  phone: string;
-  email: string;
-  website: string;
-  license: string;
-}
-
-interface Client {
-  id?: number;
-  name: string;
-  address: string;
-  // lastName: string;
-  email: string;
-  phone: string;
-}
+const businessApi = useBusinessApi();
 
 function getBusinessDetails(): BusinessDetails {
-  return {
-    name: "Masonry Contractor",
-    location: { address: "1234 Virginia St", city: "Las Vegas", state: "NV", zip: "89000" },
-    phone: "123-456-7890",
-    email: "contractor@gmail.com",
-    website: "contractor.com",
-    license: "#0000001"
-  };
+  return businessApi.getBusinessDetails();
 }
 
 function getClients(): Client[] {
@@ -87,14 +75,38 @@ function getClients(): Client[] {
   ];
 }
 
+// endregion
+
+
+// region Save-Import
+
+const importModalVisible = ref(false);
+const saveButtonItems = [
+  {
+    label: "Save as Draft",
+    command: () => {
+      console.log("Save as Draft");
+      changeView(EstimatesRequests.Estimates);
+    }
+  }
+];
+
+// endregion
+
+// region BusinessDetails
+
 const estimateName = ref<string>("Job Estimate");
 const estimateDescription = ref<string>();
 const businessDetails = ref<BusinessDetails>(getBusinessDetails());
+const businessDetailsModalVisible = ref(false);
+
+// endregion
+
+// region Client-EstimateData
+
 const selectedClient = ref<Client>();
 const clients = ref<Client[]>(getClients());
-
 const pSelect = ref<InstanceType<typeof Select>>();
-const businessDetailsModalVisible = ref(false);
 
 async function onChangeClient() {
   selectedClient.value = undefined;
@@ -131,6 +143,191 @@ const dateDifference = computed<string>(() => {
   return `Within ${ diffDays.toString() } days`;
 });
 
+// endregion
+
+// region AddTask
+
+const newTaskModalVisible = ref(false);
+const newTaskModal: Record<JobScope, { icon: Component; description: string }> = {
+  [JobScope.Installation]: {
+    icon: IJobScopesInstallation,
+    description: "New installation of CMU wall, with no pre-existing structures."
+  },
+  [JobScope.Addition]: {
+    icon: IJobScopesAddition,
+    description: "Wall-on-top or extra courses installed on pre-existing wall."
+  },
+  [JobScope.Repair]: {
+    icon: IJobScopesRepair,
+    description: "Reparation of CMU wall."
+  },
+  [JobScope.Demo]: {
+    icon: IJobScopesDemo,
+    description: "Masonry unit demolition."
+  },
+  [JobScope.TemporaryFence]: {
+    icon: IJobScopesTemporaryFence,
+    description: "Temporary fencing installation for exposed areas."
+  },
+  [JobScope.Stone]: {
+    icon: IJobScopesStone,
+    description: "Stone installation or repair."
+  }
+};
+
+async function onScopeSelected(scope: JobScope) {
+  newTaskModalVisible.value = false;
+  changeView(EstimatesRequests.NewJobTask);
+}
+
+const testToggle = ref(false);
+
+// endregion
+
+// region JobTasks
+
+const tasksModel = ref(estimate.tasks);
+const selectedTasks = ref();
+const selectedTasksAmount = computed(() => {
+  const _manualDependency = tasksModel.value;
+  if (Array.isArray(selectedTasks.value)) return selectedTasks.value.length;
+  return 0;
+});
+
+function getTaskGroupTotalPrice(jobScope: JobScope): number | undefined {
+  return estimate.tasks
+      ?.filter(task => task.scope === jobScope)
+      .reduce((acc, task) => acc + (task.price || 0), 0);
+}
+
+function formatCurrency(value: number) {
+  return value.toLocaleString("en-US", { style: "currency", currency: "USD" });
+}
+
+function formatPhone(value: string) {
+  const cleaned = ("" + value).replace(/\D/g, "");
+  const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
+  if (match) {
+    return "(" + match[1] + ") " + match[2] + "-" + match[3];
+  }
+  return value;
+}
+
+function onEditJobTaskCell(event: any) {
+  let { data, newValue, field } = event;
+
+  switch (field) {
+    case "name":
+      if (newValue.trim().length > 0) data[field] = newValue;
+      else event.preventDefault();
+      break;
+    case "price":
+      // is a number
+      if (!isNaN(newValue)) data[field] = newValue;
+      else event.preventDefault();
+      break;
+    default:
+      console.log("ERROR - onEditJobTaskCell");
+      break;
+  }
+}
+
+// endregion
+
+// region JobTaskMenu
+
+const menu = ref();
+const menuItemSelectedId = ref();
+const items = ref([
+  {
+    label: "View"
+  },
+  {
+    label: "Edit"
+  },
+  {
+    label: "Copy"
+  },
+  {
+    separator: true
+  },
+  {
+    label: "Remove",
+    icon: "pi pi-trash",
+    command: async () => {
+      if (menuItemSelectedId.value === undefined || menuItemSelectedId.value === null) return;
+      const task = estimate.tasks?.find(task => task.id === menuItemSelectedId.value);
+      if (!task) return;
+
+      deleteTask(task);
+    }
+  }
+]);
+
+function toggleJobTaskMenuItem(event: any, id: number) {
+  menuItemSelectedId.value = id;
+  menu.value.toggle(event);
+}
+
+//
+
+// region JobTaskDelete
+
+const confirm = useConfirm();
+const toast = useToast();
+watch(estimate, (newValue) => {
+  tasksModel.value = newValue.tasks;
+});
+
+const deleteTask = (task: PartialWithUndefined<JobTask>) => {
+  confirm.require({
+    message: "Do you want to delete this record permanently?",
+    header: task.name || "Untitled Task",
+    icon: "pi pi-info-circle",
+    rejectLabel: "Cancel",
+    rejectProps: {
+      label: "Cancel",
+      severity: "secondary",
+      outlined: true
+    },
+    acceptProps: {
+      label: "Delete",
+      severity: "danger"
+    },
+    accept: () => {
+      if (typeof task.id !== "number") {
+        console.error("ERROR - deleteTask");
+        return;
+      }
+
+      removeJobTask(task.id);
+      tasksModel.value = estimate.tasks;
+      toast.add({ severity: "info", summary: "Confirmed", detail: "Record deleted", life: 3000 });
+    },
+    reject: () => {
+      toast.add({ severity: "error", summary: "Rejected", detail: "Delete canceled", life: 3000 });
+    }
+  });
+};
+
+const canDeleteSelection = computed(() => {
+  return selectedTasksAmount.value !== 0;
+});
+
+function deleteSelected() {
+  console.log("deleteSelected", selectedTasks.value);
+  if (!selectedTasks.value) {
+    console.error("ERROR - deleteSelected");
+    return;
+  }
+
+  //deleteTask(selectedTasks.value);
+}
+
+
+// endregion
+
+// region ConstructionChallenges
 
 const selectedLayUpChallenges = ref();
 const layUpChallenges = [
@@ -153,91 +350,41 @@ const stockChallenges = [
   { label: "Inaccessible to Stock", value: "InaccessibleToStock" }
 ];
 
-const pumpForFooting = ref(false);
-const pumpForGrout = ref(false);
-const gateInstallation = ref(false);
-const trashRemoval = ref(false);
+const selectedConcessions = ref();
+const concessions = [
+  { label: "Pump for Footing", value: "PumpForFooting" },
+  { label: "Pump for Grout", value: "PumpForGrout" },
+  { label: "Gate Installation", value: "GateInstallation" },
+  { label: "Trash Removal", value: "TrashRemoval" }
+];
+
 const stuccoSqFt = ref<number>();
 const paintSqFt = ref<number>();
 const plasticSqFt = ref<number>();
 
-function formatCurrency(value: number) {
-  return value.toLocaleString("en-US", { style: "currency", currency: "USD" });
-}
+// endregion
 
-function formatPhone(value: string) {
-  const cleaned = ("" + value).replace(/\D/g, "");
-  const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
-  if (match) {
-    return "(" + match[1] + ") " + match[2] + "-" + match[3];
-  }
-  return value;
-}
+import { initialState } from "~/types/constants";
+console.log(initialState);
 
-const _jobTasks = ref([
-  { id: 1, scope: JobScope.Installation, name: "Dig Footing", price: 1000 },
-  { id: 2, scope: JobScope.Installation, name: "Pour Footing", price: 2000 },
-  { id: 3, scope: JobScope.Installation, name: "Lay Block", price: 3000 },
-  { id: 4, scope: JobScope.Addition, name: "Grout", price: 4000 },
-  { id: 5, scope: JobScope.Addition, name: "Stucco", price: 5000 },
-  { id: 6, scope: JobScope.Stone, name: "Stone wall", price: 6000 },
-  { id: 7, scope: JobScope.Demo, name: "Knock down retaining", price: 7000 }
-]);
-const jobTasks = computed({
-  get: () => _jobTasks.value,
-  set(newValue) {
-    _jobTasks.value = newValue;
-  }
-});
-
-const newTaskModalVisible = ref(false);
-
-interface TaskElement {
-  icon: Component;
-  description: string;
-
-}
-
-const newTaskModal: Record<JobScope, TaskElement> = {
-  [JobScope.Installation]: { icon: IJobScopesInstallation, description: "New installation of CMU wall, with no pre-existing structures." },
-  [JobScope.Addition]: { icon: IJobScopesAddition, description: "Wall-on-top or extra courses installed on pre-existing wall." },
-  [JobScope.Repair]: { icon: IJobScopesRepair, description: "Reparation of CMU wall." },
-  [JobScope.Demo]: { icon: IJobScopesDemo, description: "Masonry unit demolition." },
-  [JobScope.TemporaryFence]: { icon: IJobScopesTemporaryFence, description: "Temporary fencing installation for exposed areas." },
-  [JobScope.Stone]: { icon: IJobScopesStone, description: "Stone installation or repair." }
-};
-
-async function onScopeSelected(scope: JobScope) {
-  newTaskModalVisible.value = false;
-  changeView(EstimatesRequests.NewJobTask);
+function calculateCompletionRatio<T>(filledObj: Partial<T>, defaultObj: T = initialState, excludeFields: (keyof T)[] = []): number {
+  console.log("running calculateCompletionRatio");
+  const keys = Object.keys(defaultObj) as (keyof T)[];
+  const relevantKeys = keys.filter(key => !excludeFields.includes(key));
+  const totalFields = relevantKeys.length;
+  console.log("totalFields", totalFields);
+  const completedFields = relevantKeys.filter(key => filledObj[key] !== undefined).length;
+  console.log("completedFields", completedFields);
+  return completedFields / totalFields;
 }
 
 
-const menu = ref();
-const items = ref([
-  {
-    label: "View",
-    icon: "pi pi-eye"
-  },
-  {
-    label: "Edit",
-    icon: "pi pi-pencil"
-  },
-  {
-    label: "Remove",
-    icon: "pi pi-trash"
-  }
-]);
-
-const toggleJobTaskMenuItem = (event: any) => {
-  menu.value.toggle(event);
-};
 
 // :pt="{ rowGroupHeaderCell: (options: any) => ({ class: [''] })}"
-
 </script>
 
 <template>
+  <ConfirmDialog></ConfirmDialog>
   <div class="flex flex-col gap-4">
 
     <div class="flex flex-row justify-between mb-1">
@@ -245,15 +392,32 @@ const toggleJobTaskMenuItem = (event: any) => {
         <p class="text-xl">New Job Estimate</p>
       </div>
       <div class="flex flex-row gap-4">
-        <Button severity="secondary" icon="pi pi-times" @click="changeView(EstimatesRequests.Estimates)"/>
-        <Button label="Import Inspection" severity="secondary" @click="changeView(EstimatesRequests.Estimates)"/>
-        <Button label="Continue" iconPos="right" icon="pi pi-arrow-right" @click="changeView(EstimatesRequests.NewJobTask)"/>
+        <Button icon="pi pi-times" severity="secondary" @click="changeView(EstimatesRequests.Estimates)"/>
+        <Button label="Import" icon="pi pi-file-import" severity="secondary"
+                @click="importModalVisible = true"/>
+        <SplitButton label="Save and continue" :model="saveButtonItems"
+                     @click="changeView(EstimatesRequests.NewJobTask)"/>
+        <Dialog v-model:visible="importModalVisible" modal header="Edit Profile" :style="{ width: '25rem' }">
+          <span class="text-surface-500 dark:text-surface-400 block mb-8">Update your information.</span>
+          <div class="flex items-center gap-4 mb-4">
+            <label for="username" class="font-semibold w-24">Username</label>
+            <InputText id="username" class="flex-auto" autocomplete="off"/>
+          </div>
+          <div class="flex items-center gap-4 mb-8">
+            <label for="email" class="font-semibold w-24">Email</label>
+            <InputText id="email" class="flex-auto" autocomplete="off"/>
+          </div>
+          <div class="flex justify-end gap-2">
+            <Button type="button" label="Cancel" severity="secondary" @click="importModalVisible = false"></Button>
+            <Button type="button" label="Save" @click="importModalVisible = false"></Button>
+          </div>
+        </Dialog>
       </div>
     </div>
 
     <div>
       <Panel header="Business Details" toggleable>
-        <div class="flex flex-row justify-between my-6">
+        <div class="flex flex-row justify-between mt-12 mb-16 mx-4">
 
           <div class="flex flex-row items-center gap-8">
             <div
@@ -297,15 +461,12 @@ const toggleJobTaskMenuItem = (event: any) => {
                       icon="pi pi-pencil"/>
               <Dialog v-model:visible="businessDetailsModalVisible" modal header="Edit Business Profile"
                       :style="{ width: '25rem' }">
-                <span class="text-surface-500 dark:text-surface-400 block mb-8">Update your information.</span>
+                <span class="text-surface-500 dark:text-surface-400 block mb-8">Update your business information.</span>
                 <div class="flex items-center gap-4 mb-4">
-                  <label for="username" class="font-semibold w-24">Username</label>
-                  <InputText id="username" class="flex-auto" autocomplete="off"/>
+                  <label for="business-name" class="font-semibold w-24">Business Name</label>
+                  <InputText id="business-name" class="flex-auto" autocomplete="off"/>
                 </div>
-                <div class="flex items-center gap-4 mb-8">
-                  <label for="email" class="font-semibold w-24">Email</label>
-                  <InputText id="email" class="flex-auto" autocomplete="off"/>
-                </div>
+
                 <div class="flex justify-end gap-2">
                   <Button type="button" label="Cancel" severity="secondary"
                           @click="businessDetailsModalVisible = false"></Button>
@@ -378,70 +539,131 @@ const toggleJobTaskMenuItem = (event: any) => {
           </div>
 
           <div class="flex justify-center">
-            <DataTable :value="jobTasks" rowGroupMode="subheader" groupRowsBy="scope" sortMode="single"
-                       sortField="scope" :sortOrder="1" scrollHeight="600px" editMode="cell" style="width: 95%"
+            <DataTable :value="tasksModel" rowGroupMode="subheader" groupRowsBy="scope" sortMode="single"
+                       sortField="scope" :sortOrder="1" editMode="cell" size="small"
+                       @cell-edit-complete="onEditJobTaskCell" removableSort v-model:selection="selectedTasks"
+                       style="width: 100%"
                        :pt="{ column: { bodycell: ({ state }) => ({
-                                    class: [{ '!pt-0 !pb-0': state['d_editing'] }]
-                                })}}">
+                                    class: [{ '!pt-0 !pb-0': state['d_editing'] }, '!border-0']
+                                })},
+                                rowGroupHeaderCell: (options: any) => ({ class: ['!border-y-[1px]'] }),
+                                rowGroupFooterCell: (options: any) => ({ class: ['!border-y-[1px]'] })}">
               <template #header>
-                <div class="flex flex-wrap items-center justify-between gap-2">
-                  <span class="text-xl font-bold">Job Tasks</span>
-                  <Button label="Add task" icon="pi pi-plus" @click="newTaskModalVisible = true"/>
-                  <Dialog v-model:visible="newTaskModalVisible" modal header="Job Scopes"
-                          :draggable="false" :style="{ width: '35rem' }">
-                    <span class="block mb-8">Select the scope of the job task to be added to the estimate.</span>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 ">
-                      <div v-for="(value, key) in newTaskModal" :key="key" class="w-full p-2 h-[8rem]">
-                        <Button severity="primary" outlined fluid class="h-full"
-                                @click="onScopeSelected(key)"
-                                v-tooltip="{ value: value.description, showDelay: 300, hideDelay: 50 }">
-                          <div class="flex flex-col justify-center items-center">
-                            <component :is="value.icon" class="text-5xl" filled></component>
-                            <span>{{ key }}</span>
-                          </div>
-                        </Button>
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                  <div class="flex flex-row items-center gap-2">
+                    <span class="text-xl font-bold">Job Tasks</span>
+                    <span class="pi pi-info-circle text-zinc-500 dark:text-zinc-400" style="font-size: .875rem"></span>
+                  </div>
+                  <div class="flex flex-row items-center gap-4">
+                    <Transition>
+                      <div v-if="selectedTasksAmount" class="flex flex-row items-center gap-2">
+                        <Badge :value="selectedTasksAmount"></Badge>
+                        <span>Selected</span>
                       </div>
-                    </div>
-                  </Dialog>
+                    </Transition>
+                    <Button label="Delete" severity="secondary" :disabled="!canDeleteSelection"
+                            @click="deleteSelected"/>
+                    <Button label="Add task" icon="pi pi-plus" @click="newTaskModalVisible = true"/>
+                    <Dialog v-model:visible="newTaskModalVisible" modal header="New job task"
+                            :draggable="false" :style="{ width: '35rem' }">
+                      <div class="max-w-full px-2 pb-2">
+                        <InputText placeholder="Task name" fluid class=""></InputText>
+                      </div>
+                      <!--                    <span class="block mb-8">Select the scope of the job task to be added to the estimate.</span>-->
+                      <div class="grid grid-cols-1 sm:grid-cols-2 ">
+                        <div v-for="(jobTask, jobScope) in newTaskModal" :key="jobScope" class="w-full p-2 h-[8rem]">
+                          <ToggleButton fluid class="h-full w-full"
+                                        @click="" v-model="testToggle"
+                                        v-tooltip="{ value: jobTask.description, showDelay: 300, hideDelay: 50 }">
+                            <div class="flex flex-col justify-center items-center">
+                              <component :is="jobTask.icon" class="text-5xl" filled></component>
+                              <span class="">{{ jobScope }}</span>
+                            </div>
+                          </ToggleButton>
+                        </div>
+                      </div>
+                    </Dialog>
+                  </div>
                 </div>
               </template>
               <!--    DO NOT REMOVE groupRowsBy column attribute (e.g. scope)-->
               <Column field="scope" header="Scope"/>
-              <Column field="name" header="Name" style="min-width: 400px">
+              <Column selectionMode="multiple" style="width: 1.5rem"
+                      :pt="{ bodyCell: {  }}">
+              </Column>
+              <Column field="name" header="Name" class="" style="width: 40%">
                 <template #body="{ data }">
-                  <div class="flex items-center m-1 gap-3">
-                    <i class="pi pi-hammer text-center"/>
+                  <div class="flex items-center gap-3">
+                    <!--                    <i class="pi pi-hammer text-center"/>-->
                     <span>{{ data.name }}</span>
                   </div>
                 </template>
-                <template #editor="{ data, field }">
+                <template #editor="{ data, field }: { data: JobTask, field: string }">
                   <InputText v-model="data[field]" autofocus fluid/>
                 </template>
               </Column>
-              <Column field="price" header="Price" style="min-width: 200px">
+              <Column field="price" sortable style="width: 35%">
                 <template #body="{ data }">
-                  {{ formatCurrency(data.price) }}
+                  <div class="flex">
+                    <div class="flex flex-col">
+                      <span>{{ `\$3,510.00` }}</span>
+                      <span class="sub-description font-light text-xs">{{ formatCurrency(data.price) }}</span>
+                    </div>
+                  </div>
+                </template>
+                <template #editor="{ data }">
+                  <InputNumber v-model="data.price" fluid autofocus/>
+                </template>
+                <template #header>
+                  <div class="flex flex-col mr-2">
+                    <span class="font-semibold">Price</span>
+                    <span class="font-light text-xs">Generated Price</span>
+                  </div>
                 </template>
               </Column>
               <Column header="Status">
                 <template #body="{ data }">
+                  <div v-if="calculateCompletionRatio(data) === 1" class="flex justify-center">
+                    <span class="pi pi-check"></span>
+                  </div>
+                  <ProgressBar v-else :value="calculateCompletionRatio(data)" :showValue="false"
+                  pt:root:style="height: 0.25rem"/>
 
                 </template>
               </Column>
-              <Column style="width: 100px">
-                <template #body>
-                  <Button icon="pi pi-ellipsis-v" @click="toggleJobTaskMenuItem($event)" text rounded/>
-                  <Menu :model="items" ref="menu" popup/>
+              <Column style="width: 4rem">
+                <template #body="{ data }: { data: JobTask }">
+                  <div class="flex">
+                    <Button icon="pi pi-ellipsis-v" @click="toggleJobTaskMenuItem($event, data.id)" text rounded/>
+                    <Menu :id="data.id" :model="items" ref="menu" popup>
+                      <template #item="{ item, props }">
+                        <a v-ripple class="flex items-center" v-bind="props.action">
+                          <span v-if="item.icon" :class="item.icon"/>
+                          <span v-else style="height: 1rem; width: 1rem;"/>
+                          <span class="" style="max-height: 1rem; display: inline-flex; align-items: center;">{{
+                              item.label
+                            }}</span>
+                        </a>
+                      </template>
+                    </Menu>
+                  </div>
+
                 </template>
               </Column>
-              <template #groupheader="{ data }">
-                <div class="flex items-center gap-2">
-<!--                  <i class="pi pi-hammer"/>-->
-                  <span class="font-bold">{{ data.scope }}</span>
+              <template #groupheader="{ data }: { data: JobTask }">
+                <div class="flex items-center ml-0 gap-2">
+                  <span class="pi pi-box text-zinc-500 dark:text-zinc-400"></span>
+                  <span class="font-bold text-zinc-500 dark:text-zinc-400">{{ data.scope }}</span>
                 </div>
               </template>
-              <template #groupfooter="slotProps">
-                <div class="flex justify-end font-bold w-full">Total Customers: {{ 5 }}</div>
+              <template #groupfooter="{ data }: { data: JobTask }">
+                <div class="flex flex-row justify-end items-center w-full">
+                  <span class="font-normal sub-description mr-8">Subtotal</span>
+                  <div class="flex flex-col justify-end mr-[3rem]">
+                    <span class="font-bold">${{ getTaskGroupTotalPrice(data.scope) }}</span>
+                    <span class="sub-description font-light text-xs">${{ getTaskGroupTotalPrice(data.scope) }}</span>
+                  </div>
+                </div>
               </template>
             </DataTable>
           </div>
@@ -449,73 +671,79 @@ const toggleJobTaskMenuItem = (event: any) => {
       </Card>
     </div>
 
-    <Panel header="Business Details" toggleable>
+    <Panel header="Construction Challenges" toggleable>
 
-      <div class="flex justify-around">
-        <div>
-          <span class="text-lg">Lay Up Challenges</span>
-          <div v-for="challenge in layUpChallenges" :key="challenge.value" class="checkbox-grid">
-            <div class="checkbox">
-              <Checkbox v-model="selectedLayUpChallenges" :inputId="challenge.value" name="layUpChallenge"
-                        :value="challenge.value"/>
+      <Tabs value="0">
+        <TabList>
+          <Tab value="0">Lay Up</Tab>
+          <Tab value="1">Stock</Tab>
+          <Tab value="2">Special Concessions</Tab>
+        </TabList>
+        <TabPanels>
+          <TabPanel value="0" class="min-h-[16rem]">
+            <div class="checkbox-grid">
+              <template v-for="challenge in layUpChallenges" :key="challenge.value">
+                <div class="checkbox">
+                  <Checkbox v-model="selectedLayUpChallenges" :inputId="challenge.value" name="layUpChallenge"
+                            :value="challenge.value"/>
+                </div>
+                <label :for="challenge.value" class="grid-label text-gray-600 dark:text-gray-300">{{
+                    challenge.label
+                  }}</label>
+              </template>
             </div>
-            <label :for="challenge.value" class="grid-label">{{ challenge.label }}</label>
-          </div>
+          </TabPanel>
+          <TabPanel value="1" class="min-h-[16rem]">
+            <div class="checkbox-grid">
+              <template v-for="challenge in stockChallenges" :key="challenge.value" class="checkbox-grid">
+                <div class="checkbox">
+                  <Checkbox v-model="selectedStockChallenges" :inputId="challenge.value" name="stockChallenge"
+                            :value="challenge.value"/>
+                </div>
+                <label :for="challenge.value" class="grid-label">{{ challenge.label }}</label>
+              </template>
+            </div>
+          </TabPanel>
+          <TabPanel value="2" class="min-h-[16rem]">
+            <div class="flex flex-row">
+              <div class="checkbox-grid">
+                <template v-for="concession in concessions" :key="concession.value" class="checkbox-grid">
+                  <div class="checkbox">
+                    <Checkbox v-model="selectedConcessions" :inputId="concession.value" name="concession"
+                              :value="concession.value"/>
+                  </div>
+                  <label :for="concession.value" class="grid-label
+                  text-gray-600 dark:text-gray-300">{{ concession.label }}</label>
+                </template>
+              </div>
+              <div class="grid-container">
+                <label class="grid-l">Stucco</label>
+                <div class="grid-r">
+                  <InputGroup class="flex-1">
+                    <InputNumber v-model="stuccoSqFt"/>
+                    <InputGroupAddon>ft<sup>2</sup></InputGroupAddon>
+                  </InputGroup>
+                </div>
+                <label class="grid-l">Paint</label>
+                <div class="grid-r">
+                  <InputGroup class="flex-1">
+                    <InputNumber v-model="paintSqFt"/>
+                    <InputGroupAddon>ft<sup>2</sup></InputGroupAddon>
+                  </InputGroup>
+                </div>
+                <label class="grid-l">Plastic</label>
+                <div class="grid-r">
+                  <InputGroup class="flex-1">
+                    <InputNumber v-model="plasticSqFt"/>
+                    <InputGroupAddon>ft<sup>2</sup></InputGroupAddon>
+                  </InputGroup>
+                </div>
+              </div>
+            </div>
+          </TabPanel>
+        </TabPanels>
+      </Tabs>
 
-          <span class="text-lg">Stock Challenges</span>
-          <div v-for="challenge in stockChallenges" :key="challenge.value" class="checkbox-grid">
-            <div class="checkbox">
-              <Checkbox v-model="selectedStockChallenges" :inputId="challenge.value" name="stockChallenge"
-                        :value="challenge.value"/>
-            </div>
-            <label :for="challenge.value" class="grid-label">{{ challenge.label }}</label>
-          </div>
-        </div>
-
-        <div>
-          <p>Special Concessions</p>
-          <div class="grid-container">
-            <label class="grid-l">Pump for Footing</label>
-            <div class="grid-r">
-              <ToggleSwitch v-model="pumpForFooting"/>
-            </div>
-            <label class="grid-l">Pump for Grout</label>
-            <div class="grid-r">
-              <ToggleSwitch v-model="pumpForGrout"/>
-            </div>
-            <label class="grid-l">Gate Installation</label>
-            <div class="grid-r">
-              <ToggleSwitch v-model="gateInstallation"/>
-            </div>
-            <label class="grid-l">Trash Removal</label>
-            <div class="grid-r">
-              <ToggleSwitch v-model="trashRemoval"/>
-            </div>
-
-            <label class="grid-l">Stucco</label>
-            <div class="grid-r">
-              <InputGroup class="flex-1">
-                <InputNumber v-model="stuccoSqFt"/>
-                <InputGroupAddon>ft<sup>2</sup></InputGroupAddon>
-              </InputGroup>
-            </div>
-            <label class="grid-l">Paint</label>
-            <div class="grid-r">
-              <InputGroup class="flex-1">
-                <InputNumber v-model="paintSqFt"/>
-                <InputGroupAddon>ft<sup>2</sup></InputGroupAddon>
-              </InputGroup>
-            </div>
-            <label class="grid-l">Plastic</label>
-            <div class="grid-r">
-              <InputGroup class="flex-1">
-                <InputNumber v-model="plasticSqFt"/>
-                <InputGroupAddon>ft<sup>2</sup></InputGroupAddon>
-              </InputGroup>
-            </div>
-          </div>
-        </div>
-      </div>
     </Panel>
 
     <Panel header="Footer" toggleable :collapsed="true">
@@ -550,9 +778,9 @@ const toggleJobTaskMenuItem = (event: any) => {
 .checkbox-grid {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 10px;
   align-items: center;
-
+  column-gap: 12px;
+  row-gap: 4px;
 
   .checkbox {
     display: flex;
@@ -622,6 +850,20 @@ const toggleJobTaskMenuItem = (event: any) => {
     justify-content: center;
     gap: 12px;
   }
+}
+
+.v-enter-active,
+.v-leave-active {
+  transition: all 0.2s ease;
+}
+
+.v-enter-from {
+  opacity: 0;
+  transform: translateY(-0.5rem);
+}
+.v-leave-to {
+  opacity: 0;
+  transform: translateY(0.5rem);
 }
 
 </style>

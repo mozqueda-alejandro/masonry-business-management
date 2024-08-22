@@ -1,15 +1,18 @@
 <script setup lang="ts">
-import { watch } from "vue";
+import { type Reactive, watch } from "vue";
 import Button from "primevue/button";
 import Checkbox from "primevue/checkbox";
-import InputGroup from 'primevue/inputgroup';
-import InputGroupAddon from 'primevue/inputgroupaddon';
+import InputGroup from "primevue/inputgroup";
+import InputGroupAddon from "primevue/inputgroupaddon";
 import InputNumber from "primevue/inputnumber";
-import Select from "primevue/select"
-import SelectButton from 'primevue/selectbutton';
+import Select from "primevue/select";
+import SelectButton from "primevue/selectbutton";
 import ToggleSwitch from "primevue/toggleswitch";
 
 import { EstimatesRequests } from "~/types/constants";
+
+
+const { addJobTask } = useEstimateStore();
 const { changeView } = useGlobalNavigationStore();
 const { $api } = useNuxtApp();
 
@@ -19,28 +22,65 @@ enum LengthMeasure {
   Feet
 }
 
-const lengthMeasure = ref<LengthMeasure>();
-const lengthBlocks = ref<number>();
-const lengthFt = ref<number>();
+const importedState: PartialWithUndefined<Installation> = {
+  lengthBlocks: undefined,
+  lengthFt: undefined,
+  heightCourses: 6,
+  topFinish: undefined,
+  segments: 1223,
+  backPoints: 9876,
+  blockWidth: 5,
+  blockType: undefined,
+  blockColor: undefined,
+  premixColor: undefined,
+  specialBlockWidth: undefined,
+  specialBlockType: undefined,
+  specialBlockColor: undefined,
+  specialLengthBlocks: undefined,
+  specialLengthFt: undefined,
+  specialBlockCourses: undefined,
+  footingType: undefined,
+  footingWidthFt: 3,
+  footingDepthFt: 4,
+  horizontalInFooting: undefined,
+  verticalSpacing: undefined,
+  horizontalOnWall: undefined,
+  embedmentDepth: undefined,
+  existingDowels: true
+};
 
-watch(lengthBlocks, (blocks) => {
+import { initialState } from "~/types/constants";
+
+let selected: Reactive<PartialWithUndefined<Installation>>;
+const isImported = true;
+
+if (isImported) {
+  selected = reactive(importedState);
+} else {
+  selected = reactive(initialState);
+}
+
+
+const lengthMeasure = ref<LengthMeasure | undefined>();
+
+watch(() => selected.lengthBlocks, (blocks) => {
   if (lengthMeasure.value === LengthMeasure.Feet) return;
   if (blocks && isNumber(blocks)) {
     lengthMeasure.value = LengthMeasure.Block;
-    lengthFt.value = blocks * 4 / 3;
+    selected.lengthFt = blocks * 4 / 3;
   } else {
     lengthMeasure.value = undefined;
-    lengthFt.value = undefined;
+    selected.lengthFt = undefined;
   }
 });
-watch(lengthFt, (feet) => {
+watch(() => selected.lengthFt, (feet) => {
   if (lengthMeasure.value === LengthMeasure.Block) return;
   if (feet && isNumber(feet)) {
     lengthMeasure.value = LengthMeasure.Feet;
-    lengthBlocks.value = Math.ceil(feet * 3 / 4);
+    selected.lengthBlocks = Math.ceil(feet * 3 / 4);
   } else {
     lengthMeasure.value = undefined;
-    lengthBlocks.value = undefined;
+    selected.lengthBlocks = undefined;
   }
 });
 
@@ -48,13 +88,11 @@ function isInputDisabled(measure: LengthMeasure) {
   return lengthMeasure.value !== undefined && lengthMeasure.value !== measure;
 }
 
-const selectedHeightCourses = ref<number>();
 const heights = ref(Array.from({ length: 12 }, (_, i) => ({
   name: (i + 1).toString(),
   value: i + 1
 })));
 
-const selectedTopFinish = ref<string>();
 const topFinishes = ref([
   { name: "Coping", value: "coping" },
   { name: "Nellis", value: "nellis" },
@@ -62,21 +100,17 @@ const topFinishes = ref([
   { name: "None", value: "none" }
 ]);
 
-const segments = ref<number>();
-const backpoints = ref<number>();
 
 type BlockWidthOption = SelectOption & { disabled: boolean };
-const selectedBlockWidth = ref<number>();
 const blockWidths = ref<BlockWidthOption[]>([
   { name: "6\"", value: 6, disabled: false },
   { name: "8\"", value: 8, disabled: false },
   { name: "10\"", value: 10, disabled: false },
   { name: "12\"", value: 12, disabled: false }
 ]);
-const selectedSpecialBlockWidth = ref<number>();
 const specialBlockWidths = ref<BlockWidthOption[]>([...blockWidths.value]);
 
-watch(selectedBlockWidth, (width) => {
+watch(() => selected.blockWidth, (width) => {
   if (!width) {
     specialBlockWidths.value.forEach((specialBlock) => {
       specialBlock.disabled = false;
@@ -85,14 +119,12 @@ watch(selectedBlockWidth, (width) => {
   }
   specialBlockWidths.value.forEach((specialBlock) => {
     specialBlock.disabled = specialBlock.value !== width && specialBlock.value !== width + 2;
-    if (specialBlock.disabled && specialBlock.value === selectedSpecialBlockWidth.value) {
-      selectedSpecialBlockWidth.value = undefined;
+    if (specialBlock.disabled && specialBlock.value === selected.specialBlockWidth) {
+      selected.specialBlockWidth = undefined;
     }
   });
 });
 
-const selectedBlockType = ref<string>();
-const selectedSpecialBlockType = ref<string>();
 const blockTypes = ref<SelectOption[]>([
   { name: "Slump Stone", value: "slump-stone" },
   { name: "Smooth", value: "smooth" },
@@ -106,8 +138,6 @@ const specialBlockTypes = ref<SelectOption[]>([
   { name: "Split", value: "split" }
 ]);
 
-const selectedBlockColor = ref<string>();
-const selectedSpecialBlockColor = ref<string>();
 const blockColors = ref<SelectOption[]>([
   { name: "Baja", value: "baja" },
   { name: "Brown", value: "brown" },
@@ -117,60 +147,21 @@ const blockColors = ref<SelectOption[]>([
   { name: "Tan", value: "tan" },
   { name: "White", value: "white" }
 ]);
+
 function addBlockColor() {
-  console.log('addBlockColor');
+  console.log("addBlockColor");
 }
 
 const usesSpecialBlock = ref(true);
-
-const selectedFootingType = ref<string>();
 const footingType = ref(["Centric", "Excentric"]);
-const footingWidth = ref<number>();
-const footingDepth = ref<number>();
-const horizontalInFooting = ref<number>();
-const verticalSpacing = ref<number>();
-const horizontalOnWall = ref<number>();
-const embedmentDepth = ref<number>();
-const existingDowels = ref<boolean>();
-
-const value = ref();
 
 function createJobTask() {
-  console.log('createJobTask');
+  console.log("createJobTask");
 }
 
 function isNumber(value: any) {
   return !isNaN(parseFloat(value)) && isFinite(value);
 }
-
-const initialState: PartialWithUndefined<InstallationType> = {
-  lengthBlocks: undefined,
-  lengthFt: undefined,
-  heightCourses: undefined,
-  topFinish: undefined,
-  segments: undefined,
-  backPoints: undefined,
-  blockWidth: undefined,
-  blockType: undefined,
-  blockColor: undefined,
-  premixColor: undefined,
-  specialBlockWidth: undefined,
-  specialBlockType: undefined,
-  specialBlockColor: undefined,
-  specialLengthBlocks: undefined,
-  specialLengthFt: undefined,
-  specialBlockCourses: undefined,
-  footingType: undefined,
-  footingWidthFt: undefined,
-  footingDepthFt: undefined,
-  horizontalInFooting: undefined,
-  verticalSpacing: undefined,
-  horizontalOnWall: undefined,
-  embedmentDepth: undefined,
-  existingDowels: undefined,
-};
-
-let selected = reactive(initialState);
 
 </script>
 
@@ -190,13 +181,14 @@ let selected = reactive(initialState);
           <label class="grid-l">Length</label>
           <div class="grid-r">
             <InputGroup class="flex-1">
-              <InputNumber inputId="lengthBlock" v-model="lengthBlocks" :prefix="isInputDisabled(LengthMeasure.Block) ? '~ ' : ''"
+              <InputNumber inputId="lengthBlock" v-model="selected.lengthBlocks"
+                           :prefix="isInputDisabled(LengthMeasure.Block) ? '~ ' : ''"
                            :disabled="isInputDisabled(LengthMeasure.Block)" :min="1" :max="900" fluid/>
               <InputGroupAddon>Blocks</InputGroupAddon>
             </InputGroup>
             <UDivider label="OR" orientation="vertical"/>
             <InputGroup class="flex-1">
-              <InputNumber inputId="lengthFeet" v-model="lengthFt"
+              <InputNumber inputId="lengthFeet" v-model="selected.lengthFt"
                            :disabled="isInputDisabled(LengthMeasure.Feet)" :min="32" :max="1200" fluid
                            :maxFractionDigits="2" class="flex-1"/>
               <InputGroupAddon>ft.</InputGroupAddon>
@@ -204,19 +196,20 @@ let selected = reactive(initialState);
           </div>
           <label class="grid-l">Height</label>
           <div class="grid-r">
-            <Select v-model="selectedHeightCourses" :options="heights" placeholder="# Courses" optionLabel="name" showClear class="flex-1"/>
+            <Select v-model="selected.heightCourses" :options="heights" placeholder="# Courses" optionLabel="name" optionValue="value"
+                    showClear class="flex-1"/>
           </div>
           <label class="grid-l">Top Finish</label>
           <div class="grid-r">
-            <Select v-model="selectedTopFinish" :options="topFinishes" optionLabel="name" showClear class="flex-1"/>
+            <Select v-model="selected.topFinish" :options="topFinishes" optionLabel="name" showClear class="flex-1"/>
           </div>
           <label class="grid-l">Segments</label>
           <div class="grid-r">
-            <InputNumber v-model="segments" class="flex-1"/>
+            <InputNumber v-model="selected.segments" class="flex-1"/>
           </div>
           <label class="grid-l">Backpoints</label>
           <div class="grid-r">
-            <InputNumber v-model="backpoints" class="flex-1"/>
+            <InputNumber v-model="selected.backPoints" class="flex-1"/>
           </div>
         </div>
 
@@ -235,15 +228,16 @@ let selected = reactive(initialState);
         <div class="grid-container">
           <label class="grid-l">Block Width</label>
           <div class="grid-r-center">
-            <SelectButton v-model="selectedBlockWidth" :options="blockWidths" optionLabel="name" optionValue="value"/>
+            <SelectButton v-model="selected.blockWidth" :options="blockWidths" optionLabel="name" optionValue="value"/>
           </div>
           <label class="grid-l">Block Type</label>
           <div class="grid-r">
-            <Select v-model="selectedBlockType" :options="blockTypes" optionLabel="name" showClear class="flex-1"/>
+            <Select v-model="selected.blockType" :options="blockTypes" optionLabel="name" showClear class="flex-1"/>
           </div>
           <label class="grid-l">Block Color</label>
           <div class="grid-r">
-            <CustomSelect v-model="selectedBlockColor" defaultOptions :options="blockColors" :newItemAction="addBlockColor" class="flex-1" />
+            <CustomSelect v-model="selected.blockColor" defaultOptions :options="blockColors"
+                          :newItemAction="addBlockColor" class="flex-1"/>
           </div>
           <label class="grid-l">Premix Color</label>
           <div class="grid-r">
@@ -272,19 +266,21 @@ let selected = reactive(initialState);
           <div class="grid-container">
             <label class="grid-l">Special Block Width</label>
             <div class="grid-r-center">
-              <SelectButton v-model="selectedSpecialBlockWidth" :options="specialBlockWidths" optionLabel="name" optionValue="value" optionDisabled="disabled"/>
+              <SelectButton v-model="selected.specialBlockWidth" :options="specialBlockWidths" optionLabel="name"
+                            optionValue="value" optionDisabled="disabled"/>
             </div>
             <label class="grid-l">Length</label>
             <div class="grid-r">
-              <InputNumber v-model="value" class="flex-1"/>
+              <InputNumber v-model="selected.specialLengthFt" class="flex-1"/>
             </div>
             <label class="grid-l">Special Block Courses</label>
             <div class="grid-r">
-              <InputNumber v-model="value" class="flex-1"/>
+              <InputNumber v-model="selected.specialBlockCourses" class="flex-1"/>
             </div>
             <label class="grid-l">Special Block Type</label>
             <div class="grid-r">
-              <Select v-model="selectedSpecialBlockType" :options="specialBlockTypes" optionLabel="name" class="flex-1"/>
+              <Select v-model="selected.specialBlockType" :options="specialBlockTypes" optionLabel="name"
+                      class="flex-1"/>
             </div>
             <label class="grid-l">Special Block Color</label>
             <div class="grid-r">
@@ -308,51 +304,51 @@ let selected = reactive(initialState);
         <div class="grid-container">
           <label class="grid-l">Footing Type</label>
           <div class="grid-r-center">
-            <SelectButton v-model="selectedFootingType" :options="footingType" aria-labelledby="basic" />
+            <SelectButton v-model="selected.footingType" :options="footingType" aria-labelledby="basic"/>
           </div>
           <label class="grid-l">Footing Width</label>
           <div class="grid-r">
             <InputGroup class="flex-1">
-              <InputNumber inputId="footingWidth" v-model="footingWidth" :min="1" :max="900" fluid/>
+              <InputNumber inputId="footingWidth" v-model="selected.footingWidthFt" :min="1" :max="900" fluid/>
               <InputGroupAddon>ft.</InputGroupAddon>
             </InputGroup>
           </div>
           <label class="grid-l">Footing Depth</label>
           <div class="grid-r">
             <InputGroup class="flex-1">
-              <InputNumber inputId="footingDepth" v-model="footingDepth" :min="1" :max="900" fluid/>
+              <InputNumber inputId="footingDepth" v-model="selected.footingDepthFt" :min="1" :max="900" fluid/>
               <InputGroupAddon>ft.</InputGroupAddon>
             </InputGroup>
           </div>
           <label class="grid-l">Horizontal in Footing</label>
           <div class="grid-r">
-            <Select v-model="horizontalInFooting" class="flex-1"/>
+            <Select v-model="selected.horizontalInFooting" class="flex-1"/>
           </div>
           <label class="grid-l">Vertical Spacing</label>
           <div class="grid-r">
-            <Select v-model="verticalSpacing" class="flex-1"/>
+            <Select v-model="selected.verticalSpacing" class="flex-1"/>
           </div>
           <label class="grid-l">Horizontal on Wall</label>
           <div class="grid-r">
-            <Select v-model="horizontalOnWall" class="flex-1"/>
+            <Select v-model="selected.horizontalOnWall" class="flex-1"/>
           </div>
           <label class="grid-l">Embedment Depth</label>
           <div class="grid-r">
             <InputGroup class="flex-1">
-              <InputNumber inputId="embedmentDepth" v-model="embedmentDepth" :min="1" :max="900" fluid/>
+              <InputNumber inputId="embedmentDepth" v-model="selected.embedmentDepth" :min="1" :max="900" fluid/>
               <InputGroupAddon>in.</InputGroupAddon>
             </InputGroup>
           </div>
           <label class="grid-l">Existing Dowels</label>
           <div class="grid-r">
-            <Checkbox v-model="existingDowels" :binary="true"/>
+            <Checkbox v-model="selected.existingDowels" :binary="true"/>
           </div>
         </div>
       </div>
     </div>
 
     <div class="flex flex-row-reverse gap-4">
-      <Button label="Save" icon="pi pi-check" type="Submit" />
+      <Button label="Save" icon="pi pi-check" type="Submit"/>
       <Button label="Cancel" outlined @click="changeView(EstimatesRequests.NewEstimate)"/>
     </div>
 
@@ -419,7 +415,7 @@ let selected = reactive(initialState);
 }
 
 .slide-fade-enter-active, .slide-fade-leave-active {
-  transition: opacity 0.4s cubic-bezier(.6,0,.6,1), transform 0.4s cubic-bezier(.6,0,.6,1);
+  transition: opacity 0.4s cubic-bezier(.6, 0, .6, 1), transform 0.4s cubic-bezier(.6, 0, .6, 1);
 }
 
 .slide-fade-enter-from {

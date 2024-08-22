@@ -1,5 +1,5 @@
 <script setup lang="ts">
-
+import Toast from "primevue/toast";
 import { EstimatesRequests } from "~/types/constants";
 
 const { isHelpSlideoverOpen } = useDashboard();
@@ -109,6 +109,7 @@ const groups = [{
 </script>
 
 <template>
+  <Toast/>
   <UDashboardLayout>
     <UDashboardPanel :width="250" :resizable="{ min: 200, max: 300 }" collapsible>
       <UDashboardNavbar class="!border-transparent" :ui="{ left: 'flex-1' }">

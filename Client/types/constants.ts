@@ -32,3 +32,30 @@ function initProperties(targetClass: any) {
         };
     });
 }
+
+export const initialState: PartialWithUndefined<Installation> = {
+    lengthBlocks: undefined,
+    lengthFt: undefined,
+    heightCourses: undefined,
+    topFinish: undefined,
+    segments: undefined,
+    backPoints: undefined,
+    blockWidth: undefined,
+    blockType: undefined,
+    blockColor: undefined,
+    premixColor: undefined,
+    specialBlockWidth: undefined,
+    specialBlockType: undefined,
+    specialBlockColor: undefined,
+    specialLengthBlocks: undefined,
+    specialLengthFt: undefined,
+    specialBlockCourses: undefined,
+    footingType: undefined,
+    footingWidthFt: undefined,
+    footingDepthFt: undefined,
+    horizontalInFooting: undefined,
+    verticalSpacing: undefined,
+    horizontalOnWall: undefined,
+    embedmentDepth: undefined,
+    existingDowels: undefined
+};

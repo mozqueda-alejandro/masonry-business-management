@@ -1,5 +1,7 @@
 import Aura from "@primevue/themes/aura";
+import ConfirmationService from 'primevue/confirmationservice';
 import PrimeVue from "primevue/config";
+import ToastService from 'primevue/toastservice';
 import Tooltip from 'primevue/tooltip';
 import { definePreset } from "@primevue/themes";
 import "primeicons/primeicons.css"; // https://primevue.org/icons/
@@ -18,6 +20,8 @@ export default defineNuxtPlugin((nuxtApp) => {
     });
 
     nuxtApp.vueApp.directive('tooltip', Tooltip);
+    nuxtApp.vueApp.use(ToastService);
+    nuxtApp.vueApp.use(ConfirmationService);
 });
 
 const CustomPreset = definePreset(Aura, {

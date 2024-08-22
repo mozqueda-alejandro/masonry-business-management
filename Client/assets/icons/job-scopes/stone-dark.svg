@@ -1,6 +1,18 @@
-<svg width="300" height="240" viewBox="0 0 300 240" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect y="74" width="168" height="166" rx="19" fill="#ADACAC"/>
-<rect x="188" width="112" height="130" rx="19" fill="#ADACAC"/>
-<rect width="168" height="54" rx="19" fill="#FDFDFD"/>
-<rect x="188" y="150" width="112" height="90" rx="19" fill="#D6D6D6"/>
+<svg width="300" height="241" viewBox="0 0 300 241" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect y="24.5" width="148" height="48" fill="#D6D6D6"/>
+<line x1="143.5" y1="72.5" x2="143.5" y2="24.5" stroke="#FDFDFD" stroke-width="9"/>
+<path d="M28 0.5H176L148 24.5H0L28 0.5Z" fill="#FDFDFD"/>
+<path d="M148 24.5L176 0.5V48.5L148 72.5V24.5Z" fill="#ADACAC"/>
+<rect y="106.5" width="148" height="134" fill="#D6D6D6"/>
+<line x1="143.5" y1="240.5" x2="143.5" y2="106.5" stroke="#FDFDFD" stroke-width="9"/>
+<path d="M28 82.5H176L148 106.5H0L28 82.5Z" fill="#FDFDFD"/>
+<path d="M148 106.5L176 82.5V216.5L148 240.5V106.5Z" fill="#ADACAC"/>
+<rect x="176" y="24.5" width="96" height="122" fill="#D6D6D6"/>
+<path d="M204 0.5H300L272 24.5H176L204 0.5Z" fill="#FDFDFD"/>
+<path d="M272 24.5L300 0.5V122.5L272 146.5V24.5Z" fill="#ADACAC"/>
+<line x1="267.5" y1="146.5" x2="267.5" y2="24.5" stroke="#FDFDFD" stroke-width="9"/>
+<rect x="176" y="180.5" width="96" height="60" fill="#D6D6D6"/>
+<path d="M204 156.5H300L272 180.5H176L204 156.5Z" fill="#FDFDFD"/>
+<path d="M272 180.5L300 156.5V216.5L272 240.5V180.5Z" fill="#ADACAC"/>
+<line x1="267.5" y1="240.5" x2="267.5" y2="180.5" stroke="#FDFDFD" stroke-width="9"/>
 </svg>
