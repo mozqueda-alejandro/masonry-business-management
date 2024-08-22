@@ -58,10 +58,10 @@ export const useEstimateStore = defineStore("estimate", () => {
     }
 
     estimate.tasks = [
-        { id: 1, scope: JobScope.Installation, name: "Dig Footing", price: 1000, blockWidth: 8 },
+        { id: 1, scope: JobScope.Installation, name: "Dig Footing", price: 1000, blockWidth: 8, backPoints: 2, footingDepthFt: 2, lengthBlocks: 10, heightCourses: 3, verticalSpacing: 2 },
         { id: 2, scope: JobScope.Installation, name: "Pour Footing", price: 2000 },
         { id: 3, scope: JobScope.Installation, name: "Lay Block", price: 3000 },
-        { id: 4, scope: JobScope.Addition, name: "Grout", price: 4000, blockWidth: 6 },
+        { id: 4, scope: JobScope.Addition, name: "Grout", price: 4000, blockWidth: 6, lengthBlocks: 10, heightCourses: 3 },
         { id: 5, scope: JobScope.Addition, name: "Stucco", price: 5000 },
         { id: 6, scope: JobScope.Stone, name: "Stone wall", price: 6000 },
         { id: 7, scope: JobScope.Demo, name: "Knock down retaining", price: 7000 }

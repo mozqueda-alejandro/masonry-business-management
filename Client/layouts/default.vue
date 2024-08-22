@@ -29,7 +29,8 @@ const links = computed(() => [{
   defaultOpen: route.path.startsWith("/jobs"),
   children: [{
     label: "Jobs",
-    to: "/jobs"
+    to: "/jobs",
+    active: route.path.startsWith("/jobs") && !route.path.startsWith("/jobs/estimates"),
   }, {
     label: "Estimates",
     to: "/jobs/estimates",
@@ -38,7 +39,7 @@ const links = computed(() => [{
     }
   }, {
     label: "Invoices",
-    to: "/jobs/invoices"
+    to: "" // "/jobs/invoices"
   }, {
     label: "Clients",
     to: "/jobs/clients"

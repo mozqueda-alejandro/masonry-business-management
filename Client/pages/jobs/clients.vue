@@ -9,7 +9,7 @@ import NewJobTask from "~/components/estimates/NewJobTask.vue";
       </UDashboardNavbar>
 
       <UDashboardPanelContent>
-        <NewJobTask/>
+        Clients
       </UDashboardPanelContent>
 
     </UDashboardPanel>

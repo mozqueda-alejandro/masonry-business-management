@@ -8,8 +8,8 @@
       </UDashboardNavbar>
 
       <UDashboardPanelContent>
-
-
+        Jobs
+        <button @click="navigateTo('/jobs/invoices')">navigateTo</button>
       </UDashboardPanelContent>
 
     </UDashboardPanel>

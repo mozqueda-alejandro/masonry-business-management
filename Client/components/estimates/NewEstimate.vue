@@ -16,6 +16,7 @@ import InputGroup from "primevue/inputgroup";
 import InputGroupAddon from "primevue/inputgroupaddon";
 import InputNumber from "primevue/inputnumber";
 import InputText from "primevue/inputtext";
+import Listbox from 'primevue/listbox';
 import Menu from "primevue/menu";
 import Panel from "primevue/panel";
 import ProgressBar from "primevue/progressbar";
@@ -146,6 +147,9 @@ const dateDifference = computed<string>(() => {
 // endregion
 
 // region AddTask
+
+const selectedTask = ref();
+// const groupedTasks =
 
 const newTaskModalVisible = ref(false);
 const newTaskModal: Record<JobScope, { icon: Component; description: string }> = {
@@ -375,7 +379,7 @@ function calculateCompletionRatio<T>(filledObj: Partial<T>, defaultObj: T = init
   console.log("totalFields", totalFields);
   const completedFields = relevantKeys.filter(key => filledObj[key] !== undefined).length;
   console.log("completedFields", completedFields);
-  return completedFields / totalFields;
+  return completedFields;
 }
 
 
@@ -572,6 +576,14 @@ function calculateCompletionRatio<T>(filledObj: Partial<T>, defaultObj: T = init
                       <!--                    <span class="block mb-8">Select the scope of the job task to be added to the estimate.</span>-->
                       <div class="grid grid-cols-1 sm:grid-cols-2 ">
                         <div v-for="(jobTask, jobScope) in newTaskModal" :key="jobScope" class="w-full p-2 h-[8rem]">
+<!--                          <Listbox v-model="selectedCity" :options="groupedCities" optionLabel="label" optionGroupLabel="label" optionGroupChildren="items" class="w-full md:w-56" listStyle="max-height:250px">-->
+<!--                            <template #optiongroup="slotProps">-->
+<!--                              <div class="flex items-center">-->
+<!--                                <img :alt="slotProps.option.name" src="https://primefaces.org/cdn/primevue/images/flag/flag_placeholder.png" :class="`flag flag-${slotProps.option.code.toLowerCase()} mr-2`" style="width: 18px" />-->
+<!--                                <div>{{ slotProps.option.label }}</div>-->
+<!--                              </div>-->
+<!--                            </template>-->
+<!--                          </Listbox>-->
                           <ToggleButton fluid class="h-full w-full"
                                         @click="" v-model="testToggle"
                                         v-tooltip="{ value: jobTask.description, showDelay: 300, hideDelay: 50 }">
