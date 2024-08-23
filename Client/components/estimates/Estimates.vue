@@ -76,7 +76,7 @@ const filters = ref({
 
   <Card>
     <template #content>
-      <DataTable v-model:filters="filters" :value="estimates" tableStyle="min-width: 50rem">
+      <DataTable v-model:filters="filters" :value="estimates" paginator :rows="5" tableStyle="min-width: 50rem">
         <template #header>
           <div class="flex justify-between">
             <span class="flex">Estimates</span>

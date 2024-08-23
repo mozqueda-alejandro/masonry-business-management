@@ -37,6 +37,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         .UseSnakeCaseNamingConvention();
 });
 builder.Services.AddScoped<IBlockService, BlockService>();
+builder.Services.AddMediatR(c => c.RegisterServicesFromAssemblyContaining<Program>());
 
 var app = builder.Build();
 
