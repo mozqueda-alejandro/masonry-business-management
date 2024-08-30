@@ -3,7 +3,6 @@ import Toast from "primevue/toast";
 import { EstimatesRequests } from "~/types/constants";
 
 const { isHelpSlideoverOpen } = useDashboard();
-const { changeView } = useGlobalNavigationStore();
 const route = useRoute();
 
 
@@ -33,16 +32,13 @@ const links = computed(() => [{
     active: route.path.startsWith("/jobs") && !route.path.startsWith("/jobs/estimates"),
   }, {
     label: "Estimates",
-    to: "/jobs/estimates",
-    click: () => {
-      changeView(EstimatesRequests.Estimates);
-    }
+    to: "/estimates"
   }, {
     label: "Invoices",
     to: "" // "/jobs/invoices"
   }, {
     label: "Clients",
-    to: "/jobs/clients"
+    to: "/clients"
   }]
 }, {
   id: "purchases",

@@ -3,7 +3,7 @@
 </script>
 
 <template>
-  Jobs main view
+  <TaskForm />
 </template>
 
 <style scoped>

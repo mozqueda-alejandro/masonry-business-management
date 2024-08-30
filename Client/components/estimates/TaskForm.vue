@@ -13,7 +13,7 @@ import { EstimatesRequests } from "~/types/constants";
 
 
 const { addJobTask } = useEstimateStore();
-const { changeView } = useGlobalNavigationStore();
+const { changeView } = useNavigationStore();
 const { $api } = useNuxtApp();
 
 

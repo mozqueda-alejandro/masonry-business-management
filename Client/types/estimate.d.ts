@@ -1,17 +1,26 @@
 import { JobScope } from "~/types/enums";
+import { EstimateStatus } from "~/types/businessEnums";
 
 export {};
 
 declare global {
-    interface Estimate {
-        id: number;
-        name: string;
-        description: string;
-        number: number;
-        date: Date;
-        validUntil: Date;
-        client: string;
+    interface Estimate extends EstimateSummary {
         tasks: Partial<JobTask>[];
+    }
+
+    interface EstimateSummary {
+        id: number;
+        date: Date;
+        number: number;
+        client: string;
+        clientId?: number;
+        status: EstimateStatus;
+        usingValidUntil?: boolean;
+
+        price?: number;
+        validUntil?: Date;
+        name?: string;
+        description?: string;
     }
 
     interface JobTaskDetails {

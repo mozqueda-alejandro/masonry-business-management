@@ -10,15 +10,6 @@ declare global {
         license: string;
     }
 
-    interface Client {
-        id?: number;
-        name: string;
-        address: string;
-        // lastName: string;
-        email: string;
-        phone: string;
-    }
-
     interface Location {
         id?: number;
         address: string;
@@ -26,4 +17,13 @@ declare global {
         state: string;
         zip: string;
     }
+}
+
+export interface Client {
+    id: number;
+    name: string;
+    address: string;
+    // lastName: string;
+    email: string;
+    phone: string;
 }

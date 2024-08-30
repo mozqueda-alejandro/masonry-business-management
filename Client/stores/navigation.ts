@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { Estimates, NewEstimate, NewJobTask } from "#components";
+// import { Estimates, NewEstimate, NewJobTask } from "#components";
 import { initNavigationRequests, EstimatesRequests } from "~/types/constants";
 
 
@@ -91,7 +91,7 @@ class PageBuilder {
     }
 }
 
-export const useGlobalNavigationStore = defineStore("globalNavigation", () => {
+export const useNavigationStore = defineStore("navigation", () => {
     const route = useRoute();
     const currentComponent = shallowRef<Component | null>(null);
     const keepAliveComponents = ref<string[]>([]);
@@ -99,12 +99,12 @@ export const useGlobalNavigationStore = defineStore("globalNavigation", () => {
 
     function initPages() {
         pages.value = [
-            new PageBuilder()
-                .setPageInfo(EstimatesRequests.key(), EstimatesRequests.path())
-                .setDefaultComponent(new ViewImpl(Estimates, EstimatesRequests.Estimates.viewName))
-                .addComponent(new ViewImpl(NewEstimate, EstimatesRequests.NewEstimate.viewName, true))
-                .addComponent(new ViewImpl(NewJobTask, EstimatesRequests.NewJobTask.viewName))
-                .build()
+            // new PageBuilder()
+            //     .setPageInfo(EstimatesRequests.key(), EstimatesRequests.path())
+            //     .setDefaultComponent(new ViewImpl(Estimates, EstimatesRequests.Estimates.viewName))
+            //     .addComponent(new ViewImpl(NewEstimate, EstimatesRequests.NewEstimate.viewName, true))
+            //     .addComponent(new ViewImpl(NewJobTask, EstimatesRequests.NewJobTask.viewName))
+            //     .build()
         ];
 
         return pages;

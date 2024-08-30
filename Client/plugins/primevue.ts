@@ -9,7 +9,7 @@ import "primeicons/primeicons.css"; // https://primevue.org/icons/
 
 export default defineNuxtPlugin((nuxtApp) => {
     nuxtApp.vueApp.use(PrimeVue, {
-        components: ["Button", "DataTable", "DatePicker"],
+
         ripple: true,
         theme: {
             options: {
@@ -54,7 +54,7 @@ const Noir = definePreset(Aura, {
             600: "{zinc.600}",
             700: "{zinc.700}",
             800: "{zinc.800}",
-            900: "{zinc.900}",
+            900: "#09090b",
             950: "{zinc.950}"
         },
         colorScheme: {
@@ -84,6 +84,83 @@ const Noir = definePreset(Aura, {
                     focusBackground: "rgba(250, 250, 250, .24)",
                     color: "rgba(255,255,255,.87)",
                     focusColor: "rgba(255,255,255,.87)"
+                }
+            }
+        }
+    },
+    components: {
+        card: {
+            colorScheme: {
+                dark: {
+                    root: {
+                        background: '{surface.950}',
+                    }
+                }
+            }
+        },
+        datatable: {
+            colorScheme: {
+                dark: {
+                    header: {
+                        background: '{surface.950}',
+                    },
+                    headerCell: {
+                        background: '{surface.950}',
+                    },
+                    row: {
+                        background: '{surface.950}',
+                    }
+                }
+            }
+        },
+        datepicker: {
+            colorScheme: {
+                dark: {
+                    panel: {
+                        background: '{surface.950}',
+                    },
+                    header: {
+                        background: '{surface.950}',
+                    }
+                }
+            }
+        },
+        menu: {
+            colorScheme: {
+                dark: {
+                    root: {
+                        background: '{surface.950}',
+                    }
+                }
+            }
+        },
+        paginator: {
+            colorScheme: {
+                dark: {
+                    root: {
+                        background: '{surface.950}',
+                    }
+                }
+            }
+        },
+        panel: {
+            colorScheme: {
+                dark: {
+                    root: {
+                        background: '{surface.950}',
+                    }
+                }
+            }
+        },
+        tabs: {
+            colorScheme: {
+                dark: {
+                    tablist: {
+                        background: '{surface.950}',
+                    },
+                    tabpanel: {
+                        background: '{surface.950}',
+                    }
                 }
             }
         }

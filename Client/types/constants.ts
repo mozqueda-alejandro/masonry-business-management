@@ -59,3 +59,21 @@ export const initialState: PartialWithUndefined<Installation> = {
     embedmentDepth: undefined,
     existingDowels: undefined
 };
+
+export const initialEstimate: Partial<Estimate> = {
+    client: undefined,
+    status: EstimateStatus.Draft,
+    date: new Date(),
+    usingValidUntil: true,
+    tasks: []
+}
+
+import { EstimateStatus } from "~/types/businessEnums";
+
+export const estimateTestData: EstimateSummary[] = [
+    { status: EstimateStatus.Approved, date: new Date('2011-10-10'), id: 1, number: 1, client: "John Doe", price: 1000 },
+    { status: EstimateStatus.Draft, date: new Date('2012-10-10'), id: 2, number: 2, client: "Jane Doe", price: 2000 },
+    { status: EstimateStatus.Saved, date: new Date('2013-10-10'), id: 3, number: 3, client: "John Doe", price: 3000 },
+    { status: EstimateStatus.Sent, date: new Date('2014-10-10'), id: 4, number: 4, client: "Jane Doe", price: 4000 },
+    { status: EstimateStatus.Viewed, date: new Date('2015-10-10'), id: 5, number: 5, client: "John Doe", price: 5000 }
+];
