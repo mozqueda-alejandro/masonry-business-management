@@ -62,6 +62,7 @@ export const initialState: PartialWithUndefined<Installation> = {
 
 export const initialEstimate: Partial<Estimate> = {
     client: undefined,
+    name: "Job Estimate",
     status: EstimateStatus.Draft,
     date: new Date(),
     usingValidUntil: true,

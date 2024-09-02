@@ -69,6 +69,16 @@ export const useEstimateStore = defineStore("estimate", () => {
         estimate.value.tasks = estimate.value.tasks.filter((task) => task.id !== jobTaskId);
     }
 
+    function removeJobTasks(jobTaskIds: number[]) {
+        if (!estimate.value.tasks || estimate.value.tasks.length === 0) throw new Error("No tasks to remove");
+        if (jobTaskIds.length === 0 || jobTaskIds.length > estimate.value.tasks.length) return;
+
+        const response = true; // API call
+        if (!response) throw new Error("Failed to remove tasks");
+
+        estimate.value.tasks = estimate.value.tasks.filter((task) => !jobTaskIds.includes(<number>task.id));
+    }
+
     estimate.value.tasks = [
         { id: 1, scope: JobScope.Installation, name: "Dig Footing", price: 1000, blockWidth: 8, backPoints: 2, footingDepthFt: 2, lengthBlocks: 10, heightCourses: 3, verticalSpacing: 2 },
         { id: 2, scope: JobScope.Installation, name: "Pour Footing", price: 2000 },

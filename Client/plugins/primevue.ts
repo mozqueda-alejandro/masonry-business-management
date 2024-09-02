@@ -1,8 +1,8 @@
 import Aura from "@primevue/themes/aura";
-import ConfirmationService from 'primevue/confirmationservice';
+import ConfirmationService from "primevue/confirmationservice";
 import PrimeVue from "primevue/config";
-import ToastService from 'primevue/toastservice';
-import Tooltip from 'primevue/tooltip';
+import ToastService from "primevue/toastservice";
+import Tooltip from "primevue/tooltip";
 import { definePreset } from "@primevue/themes";
 import "primeicons/primeicons.css"; // https://primevue.org/icons/
 
@@ -19,7 +19,7 @@ export default defineNuxtPlugin((nuxtApp) => {
         }
     });
 
-    nuxtApp.vueApp.directive('tooltip', Tooltip);
+    nuxtApp.vueApp.directive("tooltip", Tooltip);
     nuxtApp.vueApp.use(ToastService);
     nuxtApp.vueApp.use(ConfirmationService);
 });
@@ -27,17 +27,17 @@ export default defineNuxtPlugin((nuxtApp) => {
 const CustomPreset = definePreset(Aura, {
     semantic: {
         primary: {
-            '50': '#fef2f2',
-            '100': '#fee2e2',
-            '200': '#fecaca',
-            '300': '#fca5a5',
-            '400': '#f87171',
-            '500': '#ee3f3f',
-            '600': '#db2727',
-            '700': '#b91c1c',
-            '800': '#991b1b',
-            '900': '#7f1d1d',
-            '950': '#450a0a'
+            "50": "#fef2f2",
+            "100": "#fee2e2",
+            "200": "#fecaca",
+            "300": "#fca5a5",
+            "400": "#f87171",
+            "500": "#ee3f3f",
+            "600": "#db2727",
+            "700": "#b91c1c",
+            "800": "#991b1b",
+            "900": "#7f1d1d",
+            "950": "#450a0a"
         }
     }
 });
@@ -54,7 +54,7 @@ const Noir = definePreset(Aura, {
             600: "{zinc.600}",
             700: "{zinc.700}",
             800: "{zinc.800}",
-            900: "#09090b",
+            900: "{zinc.900}",
             950: "{zinc.950}"
         },
         colorScheme: {
@@ -79,6 +79,17 @@ const Noir = definePreset(Aura, {
                     hoverColor: "{zinc.100}",
                     activeColor: "{zinc.200}"
                 },
+                overlay: {
+                    select: {
+                        background: '{surface.950}',
+                    },
+                    popover: {
+                        background: '{surface.950}',
+                    },
+                    modal: {
+                        background: '{surface.950}',
+                    }
+                },
                 highlight: {
                     background: "rgba(250, 250, 250, .16)",
                     focusBackground: "rgba(250, 250, 250, .24)",
@@ -93,7 +104,7 @@ const Noir = definePreset(Aura, {
             colorScheme: {
                 dark: {
                     root: {
-                        background: '{surface.950}',
+                        background: "{surface.950}"
                     }
                 }
             }
@@ -102,13 +113,13 @@ const Noir = definePreset(Aura, {
             colorScheme: {
                 dark: {
                     header: {
-                        background: '{surface.950}',
+                        background: "{surface.950}"
                     },
                     headerCell: {
-                        background: '{surface.950}',
+                        background: "{surface.950}"
                     },
                     row: {
-                        background: '{surface.950}',
+                        background: "{surface.950}"
                     }
                 }
             }
@@ -117,10 +128,10 @@ const Noir = definePreset(Aura, {
             colorScheme: {
                 dark: {
                     panel: {
-                        background: '{surface.950}',
+                        background: "{surface.950}"
                     },
                     header: {
-                        background: '{surface.950}',
+                        background: "{surface.950}"
                     }
                 }
             }
@@ -129,7 +140,16 @@ const Noir = definePreset(Aura, {
             colorScheme: {
                 dark: {
                     root: {
-                        background: '{surface.950}',
+                        background: "{surface.950}"
+                    }
+                }
+            }
+        },
+        dialog: {
+            colorScheme: {
+                dark: {
+                    root: {
+                        background: "{surface.950}"
                     }
                 }
             }
@@ -138,7 +158,7 @@ const Noir = definePreset(Aura, {
             colorScheme: {
                 dark: {
                     root: {
-                        background: '{surface.950}',
+                        background: "{surface.950}"
                     }
                 }
             }
@@ -147,7 +167,7 @@ const Noir = definePreset(Aura, {
             colorScheme: {
                 dark: {
                     root: {
-                        background: '{surface.950}',
+                        background: "{surface.950}"
                     }
                 }
             }
@@ -156,10 +176,10 @@ const Noir = definePreset(Aura, {
             colorScheme: {
                 dark: {
                     tablist: {
-                        background: '{surface.950}',
+                        background: "{surface.950}"
                     },
                     tabpanel: {
-                        background: '{surface.950}',
+                        background: "{surface.950}"
                     }
                 }
             }

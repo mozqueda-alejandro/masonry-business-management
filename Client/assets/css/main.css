@@ -5,3 +5,7 @@
 .dark-mode .sub-description {
     color: var(--p-zinc-400);
 }
+
+.subtitle {
+    color: var(--p-text-muted-color);
+}

@@ -21,8 +21,8 @@ import Panel from "primevue/panel";
 import ProgressBar from "primevue/progressbar";
 import Select from "primevue/select";
 import SplitButton from "primevue/splitbutton";
-import ToggleButton from "primevue/togglebutton";
-import ToggleSwitch from "primevue/toggleswitch";
+import Textarea from "primevue/textarea";
+
 
 import Tabs from "primevue/tabs";
 import TabList from "primevue/tablist";
@@ -155,7 +155,7 @@ const dateDifference = computed(() => {
   const diff = estimateEdit.value.validUntil.getTime() - estimateEdit.value.date.getTime();
   const diffDays = Math.ceil(diff / (1000 * 60 * 60 * 24));
 
-  if (diffDays === 0) return "Within today";
+  if (diffDays === 0) return "By today";
   if (diffDays === 1) return "Within 1 day";
   return `Within ${ diffDays.toString() } days`;
 });
@@ -204,7 +204,7 @@ const menu = ref();
 const menuItemSelectedId = ref();
 watch(menuItemSelectedId, (newValue) => {
   console.log("menuItemSelectedId ->", newValue);
-})
+});
 const items = ref([
   { label: "View" },
   { label: "Edit" },
@@ -273,9 +273,9 @@ async function onAddTaskContinue(scope: JobScope, estimateId?: number) {
   newTaskModalVisible.value = false;
   let newTaskRoute: string;
   if (estimateId !== undefined) {
-    newTaskRoute = `/estimates/${ estimateId }/add-task`;
+    newTaskRoute = `/estimates/${ estimateId }/new-task`;
   } else {
-    newTaskRoute = "/estimates/add-task";
+    newTaskRoute = "/estimates/new-task";
   }
 
   navigateTo(newTaskRoute);
@@ -340,7 +340,19 @@ function deleteSelected() {
 
 // region ConstructionChallenges
 
-const selectedLayUpChallenges = ref();
+interface ChallengeList {
+  layUp: string[];
+  stock: string[];
+  concessions: string[];
+}
+
+const initialChallenges = {
+  layUp: [],
+  stock: [],
+  concessions: []
+};
+const selectedChallenges = ref<ChallengeList>(initialChallenges);
+
 const layUpChallenges = [
   { label: "Inaccessible to Lay Up", value: "InaccessibleToLayUp" },
   { label: "In Between Trees", value: "InBetweenTrees" },
@@ -350,7 +362,6 @@ const layUpChallenges = [
   { label: "Insurance Paid", value: "InsurancePaid" }
 ];
 
-const selectedStockChallenges = ref();
 const stockChallenges = [
   { label: "Stock Changes", value: "StockChanges" },
   { label: "Far From Wall", value: "FarFromWall" },
@@ -361,23 +372,45 @@ const stockChallenges = [
   { label: "Inaccessible to Stock", value: "InaccessibleToStock" }
 ];
 
-const selectedConcessions = ref();
 const concessions = [
   { label: "Pump for Footing", value: "PumpForFooting" },
   { label: "Pump for Grout", value: "PumpForGrout" },
   { label: "Gate Installation", value: "GateInstallation" },
   { label: "Trash Removal", value: "TrashRemoval" }
 ];
-
 const stuccoSqFt = ref<number>();
 const paintSqFt = ref<number>();
 const plasticSqFt = ref<number>();
 
+const selectedConcessionsAmount = computed<number>(() => {
+  let amount = 0;
+  if (selectedChallenges.value.concessions) {
+    amount = selectedChallenges.value.concessions.length;
+  }
+  if (stuccoSqFt.value) amount++;
+  if (paintSqFt.value) amount++;
+  if (plasticSqFt.value) amount++;
+
+  return amount;
+});
+
+const challengeTabValue = ref("0");
+const tabList = ref<InstanceType<typeof TabList>>();
+
+async function triggerTabUpdate() {
+  await nextTick();
+  tabList.value?.updateInkBar();
+}
+
+// endregion
+
+// region Notes
+
+const notes = ref("");
+
 // endregion
 
 import { initialState } from "~/types/constants";
-
-console.log(initialState);
 
 function calculateCompletionRatio<T>(filledObj: Partial<T>, defaultObj: T = initialState, excludeFields: (keyof T)[] = []): number {
   const keys = Object.keys(defaultObj) as (keyof T)[];
@@ -441,11 +474,11 @@ const groupedCities = ref([
               <p class="text-xl">New Job Estimate</p>
             </div>
             <div class="flex flex-row gap-4">
-              <Button icon="pi pi-times" severity="secondary" @click="navigateTo('/estimates')"/>
-              <Button label="Import" icon="pi pi-file-import" severity="secondary"
+              <Button icon="pi pi-times" outlined @click="navigateTo('/estimates')"/>
+              <Button label="Import" icon="pi pi-file-import" outlined
                       @click="importModalVisible = true"/>
               <SplitButton label="Save and continue" :model="saveButtonItems"
-                           @click="navigateTo('/estimates/add-task')"/>
+                           @click="navigateTo('/estimates/new-task')"/>
               <Dialog v-model:visible="importModalVisible" modal header="Edit Profile" :style="{ width: '25rem' }">
                 <span class="text-surface-500 dark:text-surface-400 block mb-8">Update your information.</span>
                 <div class="flex items-center gap-4 mb-4">
@@ -466,20 +499,21 @@ const groupedCities = ref([
           </div>
 
           <div>
-            <Panel header="Business Details" toggleable>
+            <Panel header="Business Details" toggleable :collapsed="true">
               <div class="flex flex-row justify-between mt-12 mb-16 mx-4">
 
                 <div class="flex flex-row items-center gap-8">
-                  <div
-                      class="flex flex-col justify-center gap-2 border-dashed border-black dark:border-white border-[2px] w-[340px] h-[220px] rounded-lg">
-                    <i class="pi pi-cloud-upload text-center mb-2" style="font-size: 3rem"></i>
-                    <p class="text-center">Browse or drop your logo here.</p>
-                    <p class="sub-description text-center text-sm">
-                      Maximum 5MB in size.<br>
-                      JPG, PNG, or GIF formats.<br>
-                      Recommended size: 300 x 200 pixels.
-                    </p>
-                  </div>
+                  <Button outlined>
+                    <div class="flex flex-col justify-center gap-2 w-[340px] h-[220px] rounded-lg">
+                      <i class="pi pi-cloud-upload text-center mb-2" style="font-size: 2.5rem"></i>
+                      <p class="text-center">Browse or drop your logo here.</p>
+                      <p class="sub-description text-center text-sm">
+                        Maximum 5MB in size.<br>
+                        JPG, PNG, or GIF formats.<br>
+                        Recommended size: 300 x 200 pixels.
+                      </p>
+                    </div>
+                  </Button>
 
                   <div class="flex flex-col gap-3">
                     <p class="business-details">
@@ -620,10 +654,11 @@ const groupedCities = ref([
                                   @click="deleteSelected"/>
                           <Button label="Add task" icon="pi pi-plus" @click="newTaskModalVisible = true"/>
                           <Dialog v-model:visible="newTaskModalVisible" modal header="New job task"
-                                  :draggable="false" :style="{ width: '35rem', height: '30rem'}">
+                                  :draggable="false" :style="{ width: '40rem', height: '28rem'}">
                             <div class="flex flex-row">
                               <Listbox v-model="selectedCity" :options="groupedCities" optionLabel="label"
-                                       optionGroupLabel="label" optionGroupChildren="items" class="w-full h-full md:w-56">
+                                       optionGroupLabel="label" optionGroupChildren="items"
+                                       class="w-full h-full md:w-56">
                                 <template #optiongroup="slotProps">
                                   <div class="flex items-center">
                                     <img :alt="slotProps.option.name"
@@ -647,9 +682,7 @@ const groupedCities = ref([
                     </template>
                     <!--    DO NOT REMOVE groupRowsBy column attribute (e.g. scope)-->
                     <Column field="scope" header="Scope"/>
-                    <Column selectionMode="multiple" style="width: 1.5rem"
-                            :pt="{ bodyCell: {  }}">
-                    </Column>
+                    <Column selectionMode="multiple" style="width: 1.5rem"/>
                     <Column field="name" header="Name" class="" style="width: 40%">
                       <template #body="{ data }">
                         <div class="flex items-center gap-3">
@@ -738,80 +771,125 @@ const groupedCities = ref([
             </Card>
           </div>
 
-          <Panel header="Construction Challenges" toggleable>
-
-            <Tabs value="0">
-              <TabList>
-                <Tab value="0">Lay Up</Tab>
-                <Tab value="1">Stock</Tab>
-                <Tab value="2">Special Concessions</Tab>
-              </TabList>
-              <TabPanels>
-                <TabPanel value="0" class="min-h-[16rem]">
-                  <div class="checkbox-grid">
-                    <template v-for="challenge in layUpChallenges" :key="challenge.value">
-                      <div class="checkbox">
-                        <Checkbox v-model="selectedLayUpChallenges" :inputId="challenge.value" name="layUpChallenge"
-                                  :value="challenge.value"/>
-                      </div>
-                      <label :for="challenge.value" class="grid-label text-gray-600 dark:text-gray-300">{{
-                          challenge.label
-                        }}</label>
-                    </template>
+          <Card class="flex-1">
+            <template #content>
+              <div class="flex flex-row justify-between items-stretch gap-4">
+                <div class="flex flex-col flex-1">
+                  <div class="card-header">
+                    <span class="text">Construction Challenges</span>
                   </div>
-                </TabPanel>
-                <TabPanel value="1" class="min-h-[16rem]">
-                  <div class="checkbox-grid">
-                    <template v-for="challenge in stockChallenges" :key="challenge.value" class="checkbox-grid">
-                      <div class="checkbox">
-                        <Checkbox v-model="selectedStockChallenges" :inputId="challenge.value" name="stockChallenge"
-                                  :value="challenge.value"/>
-                      </div>
-                      <label :for="challenge.value" class="grid-label">{{ challenge.label }}</label>
-                    </template>
-                  </div>
-                </TabPanel>
-                <TabPanel value="2" class="min-h-[16rem]">
-                  <div class="flex flex-row">
-                    <div class="checkbox-grid">
-                      <template v-for="concession in concessions" :key="concession.value" class="checkbox-grid">
-                        <div class="checkbox">
-                          <Checkbox v-model="selectedConcessions" :inputId="concession.value" name="concession"
-                                    :value="concession.value"/>
+                  <Tabs v-model:value="challengeTabValue">
+                    <TabList ref="tabList">
+                      <Tab value="0">
+                        <div class="tab">
+                          <span>Lay up</span>
+                          <Transition @before-enter="triggerTabUpdate" @after-leave="triggerTabUpdate">
+                          <span v-if="selectedChallenges.layUp.length" class="badge"
+                                :class="{ 'badge-inactive': challengeTabValue !== '0' }">
+                            {{ selectedChallenges.layUp.length }}
+                          </span>
+                          </Transition>
                         </div>
-                        <label :for="concession.value" class="grid-label
-                  text-gray-600 dark:text-gray-300">{{ concession.label }}</label>
-                      </template>
-                    </div>
-                    <div class="grid-container">
-                      <label class="grid-l">Stucco</label>
-                      <div class="grid-r">
-                        <InputGroup class="flex-1">
-                          <InputNumber v-model="stuccoSqFt"/>
-                          <InputGroupAddon>ft<sup>2</sup></InputGroupAddon>
-                        </InputGroup>
-                      </div>
-                      <label class="grid-l">Paint</label>
-                      <div class="grid-r">
-                        <InputGroup class="flex-1">
-                          <InputNumber v-model="paintSqFt"/>
-                          <InputGroupAddon>ft<sup>2</sup></InputGroupAddon>
-                        </InputGroup>
-                      </div>
-                      <label class="grid-l">Plastic</label>
-                      <div class="grid-r">
-                        <InputGroup class="flex-1">
-                          <InputNumber v-model="plasticSqFt"/>
-                          <InputGroupAddon>ft<sup>2</sup></InputGroupAddon>
-                        </InputGroup>
-                      </div>
-                    </div>
-                  </div>
-                </TabPanel>
-              </TabPanels>
-            </Tabs>
+                      </Tab>
+                      <Tab value="1">
+                        <div class="tab">
+                          <span>Stock</span>
+                          <Transition @before-enter="triggerTabUpdate" @after-leave="triggerTabUpdate">
+                          <span v-if="selectedChallenges.stock.length" class="badge"
+                                :class="{ 'badge-inactive': challengeTabValue !== '1' }">
+                            {{ selectedChallenges.stock.length }}
+                          </span>
+                          </Transition>
+                        </div>
+                      </Tab>
+                      <Tab value="2">
+                        <div class="tab">
+                          <span>Concessions</span>
+                          <Transition @before-enter="triggerTabUpdate" @after-leave="triggerTabUpdate">
+                          <span v-if="selectedConcessionsAmount" class="badge"
+                                :class="{ 'badge-inactive': challengeTabValue !== '2' }">
+                            {{ selectedConcessionsAmount }}
+                          </span>
+                          </Transition>
+                        </div>
+                      </Tab>
+                    </TabList>
+                    <TabPanels>
+                      <TabPanel value="0" class="min-h-[16rem]">
+                        <div class="checkbox-grid">
+                          <template v-for="challenge in layUpChallenges" :key="challenge.value">
+                            <div class="checkbox">
+                              <Checkbox v-model="selectedChallenges.layUp" :inputId="challenge.value"
+                                        name="layUpChallenge" :value="challenge.value"/>
+                            </div>
+                            <label :for="challenge.value" class="grid-label subtitle">{{
+                                challenge.label
+                              }}</label>
+                          </template>
+                        </div>
+                      </TabPanel>
+                      <TabPanel value="1" class="min-h-[16rem]">
+                        <div class="checkbox-grid">
+                          <template v-for="challenge in stockChallenges" :key="challenge.value" class="checkbox-grid">
+                            <div class="checkbox">
+                              <Checkbox v-model="selectedChallenges.stock" :inputId="challenge.value"
+                                        name="stockChallenge" :value="challenge.value"/>
+                            </div>
+                            <label :for="challenge.value" class="grid-label subtitle">{{ challenge.label }}</label>
+                          </template>
+                        </div>
+                      </TabPanel>
+                      <TabPanel value="2" class="min-h-[16rem]">
+                        <div class="flex flex-row gap-2">
+                          <div class="checkbox-grid">
+                            <template v-for="concession in concessions" :key="concession.value" class="checkbox-grid">
+                              <div class="checkbox">
+                                <Checkbox v-model="selectedChallenges.concessions" :inputId="concession.value"
+                                          name="concession" :value="concession.value"/>
+                              </div>
+                              <label :for="concession.value" class="grid-label subtitle">{{
+                                  concession.label
+                                }}</label>
+                            </template>
+                          </div>
+                          <div class="grid-container">
+                            <label class="grid-l">Stucco</label>
+                            <div class="grid-r">
+                              <InputGroup>
+                                <InputNumber v-model="stuccoSqFt"/>
+                                <InputGroupAddon>ft<sup>2</sup></InputGroupAddon>
+                              </InputGroup>
+                            </div>
+                            <label class="grid-l">Paint</label>
+                            <div class="grid-r">
+                              <InputGroup>
+                                <InputNumber v-model="paintSqFt"/>
+                                <InputGroupAddon>ft<sup>2</sup></InputGroupAddon>
+                              </InputGroup>
+                            </div>
+                            <label class="grid-l">Plastic</label>
+                            <div class="grid-r">
+                              <InputGroup>
+                                <InputNumber v-model="plasticSqFt"/>
+                                <InputGroupAddon>ft<sup>2</sup></InputGroupAddon>
+                              </InputGroup>
+                            </div>
+                          </div>
+                        </div>
+                      </TabPanel>
+                    </TabPanels>
+                  </Tabs>
+                </div>
 
-          </Panel>
+                <div class="flex flex-col flex-1">
+                  <div class="card-header">
+                    <span class="text">Cost Breakdown</span>
+                  </div>
+
+                </div>
+              </div>
+            </template>
+          </Card>
 
           <Panel header="Footer" toggleable :collapsed="true">
           </Panel>
@@ -856,6 +934,7 @@ const groupedCities = ref([
   }
 
   .grid-label {
+    min-width: 10rem;
     margin: 4px;
     display: flex;
     align-items: center;
@@ -887,7 +966,7 @@ const groupedCities = ref([
 
 .grid-container {
   display: grid;
-  grid-template-columns: 140px 1fr;
+  grid-template-columns: 4.5rem 1fr;
   grid-auto-rows: 50px;
   column-gap: 8px;
   width: 100%;
@@ -917,6 +996,44 @@ const groupedCities = ref([
     align-items: center;
     justify-content: center;
     gap: 12px;
+  }
+}
+
+.tab {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: 1.5rem;
+}
+
+.badge {
+  display: inline-flex;
+  background-color: var(--p-surface-800);
+  color: var(--p-text-color);
+  height: 1.5rem;
+  width: 1.5rem;
+  border-radius: .75rem;
+  font-size: 0.75rem;
+  margin-left: 0.5rem;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-weight: bold;
+}
+
+.badge-inactive {
+  background-color: var(--p-surface-700);
+  color: var(--p-text-muted-color);
+}
+
+
+.card-header {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 0.5rem;
+
+  .text {
+    font-weight: 600;
   }
 }
 
