@@ -81,13 +81,13 @@ const Noir = definePreset(Aura, {
                 },
                 overlay: {
                     select: {
-                        background: '{surface.950}',
+                        background: "{surface.950}"
                     },
                     popover: {
-                        background: '{surface.950}',
+                        background: "{surface.950}"
                     },
                     modal: {
-                        background: '{surface.950}',
+                        background: "{surface.950}"
                     }
                 },
                 highlight: {
@@ -100,6 +100,15 @@ const Noir = definePreset(Aura, {
         }
     },
     components: {
+        tieredmenu: {
+            colorScheme: {
+                dark: {
+                    root: {
+                        background: "{surface.950}"
+                    }
+                }
+            }
+        },
         card: {
             colorScheme: {
                 dark: {

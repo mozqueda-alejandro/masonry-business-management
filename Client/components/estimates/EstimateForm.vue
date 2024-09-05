@@ -11,6 +11,7 @@ import ConfirmDialog from "primevue/confirmdialog";
 import DataTable from "primevue/datatable";
 import DatePicker from "primevue/datepicker";
 import Dialog from "primevue/dialog";
+import Divider from "primevue/divider";
 import InputGroup from "primevue/inputgroup";
 import InputGroupAddon from "primevue/inputgroupaddon";
 import InputNumber from "primevue/inputnumber";
@@ -340,10 +341,25 @@ function deleteSelected() {
 
 // region ConstructionChallenges
 
+interface Challenge<T extends boolean | number> {
+  id: number;
+  label: string;
+  value: T;
+}
+
+interface ChallengeToggle extends Challenge<boolean> {
+  addOnPrice: number;
+}
+
+interface ChallengeTask extends Challenge<number> {
+  unitPrice: number;
+  unit: string;
+}
+
 interface ChallengeList {
-  layUp: string[];
-  stock: string[];
-  concessions: string[];
+  layUp: number[];
+  stock: number[];
+  concessions: number[];
 }
 
 const initialChallenges = {
@@ -353,31 +369,40 @@ const initialChallenges = {
 };
 const selectedChallenges = ref<ChallengeList>(initialChallenges);
 
-const layUpChallenges = [
-  { label: "Inaccessible to Lay Up", value: "InaccessibleToLayUp" },
-  { label: "In Between Trees", value: "InBetweenTrees" },
-  { label: "8 Inch Block", value: "EightInchBlock" },
-  { label: "Wall Pattern", value: "WallPattern" },
-  { label: "Next to Pipes", value: "NextToPipes" },
-  { label: "Insurance Paid", value: "InsurancePaid" }
+const layUpChallenges: ChallengeToggle[] = [
+  { id: 1, label: "Inaccessible to lay up", value: true, addOnPrice: 60 },
+  { id: 2, label: "In between trees", value: false, addOnPrice: 30 },
+  { id: 3, label: "8\" block", value: false, addOnPrice: 50 },
+  { id: 4, label: "Wall pattern", value: false, addOnPrice: 40 },
+  { id: 5, label: "Next to pipes", value: false, addOnPrice: 20 },
+  { id: 6, label: "Insurance paid", value: true, addOnPrice: 150 }
 ];
 
-const stockChallenges = [
-  { label: "Stock Changes", value: "StockChanges" },
-  { label: "Far From Wall", value: "FarFromWall" },
-  { label: "Outside Corner Lot", value: "OutsideCornerLot" },
-  { label: "Cover Pool", value: "CoverPool" },
-  { label: "Cover Landscape", value: "CoverLandscape" },
-  { label: "Cover Concrete", value: "CoverConcrete" },
-  { label: "Inaccessible to Stock", value: "InaccessibleToStock" }
+const stockChallenges: ChallengeToggle[] = [
+  { id: 7, label: "Stock changes", value: false, addOnPrice: 60 },
+  { id: 8, label: "Far from wall", value: true, addOnPrice: 30 },
+  { id: 9, label: "Outside corner lot", value: false, addOnPrice: 50 },
+  { id: 10, label: "Cover pool", value: false, addOnPrice: 40 },
+  { id: 11, label: "Cover landscape", value: false, addOnPrice: 20 },
+  { id: 12, label: "Cover concrete", value: false, addOnPrice: 150 }
 ];
 
-const concessions = [
-  { label: "Pump for Footing", value: "PumpForFooting" },
-  { label: "Pump for Grout", value: "PumpForGrout" },
-  { label: "Gate Installation", value: "GateInstallation" },
-  { label: "Trash Removal", value: "TrashRemoval" }
+const concessions: ChallengeToggle[] = [
+  { id: 13, label: "Pump for footing", value: false, addOnPrice: 60 },
+  { id: 14, label: "Pump for grout", value: false, addOnPrice: 30 },
+  { id: 15, label: "Gate installation", value: true, addOnPrice: 50 },
+  { id: 16, label: "Trash removal", value: false, addOnPrice: 40 }
 ];
+
+// for each element in above lists, add id to selectedChallenges if challenge value is true
+// do it once, it should not be reactive
+if (selectedChallenges.value.layUp.length === 0) {
+  selectedChallenges.value.layUp = layUpChallenges
+      .filter(challenge => challenge.value)
+      .map(challenge => challenge.id);
+}
+
+
 const stuccoSqFt = ref<number>();
 const paintSqFt = ref<number>();
 const plasticSqFt = ref<number>();
@@ -454,6 +479,7 @@ const groupedCities = ref([
   }
 ]);
 
+
 // :pt="{ rowGroupHeaderCell: (options: any) => ({ class: [''] })}"
 </script>
 
@@ -474,7 +500,7 @@ const groupedCities = ref([
               <p class="text-xl">New Job Estimate</p>
             </div>
             <div class="flex flex-row gap-4">
-              <Button icon="pi pi-times" outlined @click="navigateTo('/estimates')"/>
+              <Button label="Discard" outlined @click="navigateTo('/estimates')"/>
               <Button label="Import" icon="pi pi-file-import" outlined
                       @click="importModalVisible = true"/>
               <SplitButton label="Save and continue" :model="saveButtonItems"
@@ -624,16 +650,14 @@ const groupedCities = ref([
                     <p class="estimate-r sub-description text-sm">{{ dateDifference }}</p>
                   </div>
                 </div>
-
                 <div class="flex justify-center">
-                  <DataTable :value="estimateEdit.tasks" rowGroupMode="subheader" groupRowsBy="scope" sortMode="single"
+                  <DataTable  :value="estimateEdit.tasks" rowGroupMode="subheader" groupRowsBy="scope" sortMode="single"
                              sortField="scope" :sortOrder="1" editMode="cell" size="small"
                              @cell-edit-complete="onEditJobTaskCell" removableSort v-model:selection="selectedTasks"
                              style="width: 100%"
                              :pt="{ column: { bodycell: ({ state }) => ({
                                     class: [{ '!pt-0 !pb-0': state['d_editing'] }, '!border-0']
                                 })},
-                                header: { class: '!rounded' },
                                 rowGroupHeaderCell: (options: any) => ({ class: ['!border-y-[1px]'] }),
                                 rowGroupFooterCell: (options: any) => ({ class: ['!border-y-[1px]'] })}">
                     <template #header>
@@ -817,41 +841,47 @@ const groupedCities = ref([
                     <TabPanels>
                       <TabPanel value="0" class="min-h-[16rem]">
                         <div class="checkbox-grid">
-                          <template v-for="challenge in layUpChallenges" :key="challenge.value">
+                          <template v-for="challenge in layUpChallenges" :key="String(challenge.id)">
                             <div class="checkbox">
-                              <Checkbox v-model="selectedChallenges.layUp" :inputId="challenge.value"
-                                        name="layUpChallenge" :value="challenge.value"/>
+                              <Checkbox v-model="selectedChallenges.layUp" :inputId="challenge.id"
+                                        name="layUpChallenge" :value="challenge.id"/>
                             </div>
-                            <label :for="challenge.value" class="grid-label subtitle">{{
-                                challenge.label
-                              }}</label>
+                            <label :for="String(challenge.id)" class="checkbox-label">
+                              {{ challenge.label }}
+                            </label>
+                            <span class="subtitle">+ {{ formatCurrency(challenge.addOnPrice) }}</span>
                           </template>
                         </div>
                       </TabPanel>
                       <TabPanel value="1" class="min-h-[16rem]">
                         <div class="checkbox-grid">
-                          <template v-for="challenge in stockChallenges" :key="challenge.value" class="checkbox-grid">
+                          <template v-for="challenge in stockChallenges" :key="String(challenge.id)" class="checkbox-grid">
                             <div class="checkbox">
-                              <Checkbox v-model="selectedChallenges.stock" :inputId="challenge.value"
-                                        name="stockChallenge" :value="challenge.value"/>
+                              <Checkbox v-model="selectedChallenges.stock" :inputId="challenge.id"
+                                        name="stockChallenge" :value="challenge.id"/>
                             </div>
-                            <label :for="challenge.value" class="grid-label subtitle">{{ challenge.label }}</label>
+                            <label :for="String(challenge.id)" class="checkbox-label">
+                              {{ challenge.label }}
+                            </label>
+                            <span class="subtitle">+ {{ formatCurrency(challenge.addOnPrice) }}</span>
                           </template>
                         </div>
                       </TabPanel>
                       <TabPanel value="2" class="min-h-[16rem]">
-                        <div class="flex flex-row gap-2">
+                        <div class="flex flex-col">
                           <div class="checkbox-grid">
-                            <template v-for="concession in concessions" :key="concession.value" class="checkbox-grid">
+                            <template v-for="concession in concessions" :key="String(concession.id)" class="checkbox-grid">
                               <div class="checkbox">
-                                <Checkbox v-model="selectedChallenges.concessions" :inputId="concession.value"
-                                          name="concession" :value="concession.value"/>
+                                <Checkbox v-model="selectedChallenges.concessions" :inputId="concession.id"
+                                          name="concession" :value="concession.id"/>
                               </div>
-                              <label :for="concession.value" class="grid-label subtitle">{{
-                                  concession.label
-                                }}</label>
+                              <label :for="String(concession.id)" class="checkbox-label" :class="{ 'checkbox-label-selected': selectedChallenges.concessions.includes(concession.id) }">
+                                {{ concession.label }}
+                              </label>
+                              <span class="subtitle">+ {{ formatCurrency(concession.addOnPrice) }}</span>
                             </template>
                           </div>
+                          <Divider />
                           <div class="grid-container">
                             <label class="grid-l">Stucco</label>
                             <div class="grid-r">
@@ -860,6 +890,12 @@ const groupedCities = ref([
                                 <InputGroupAddon>ft<sup>2</sup></InputGroupAddon>
                               </InputGroup>
                             </div>
+                            <span class="subtitle">+ {{ formatCurrency(49) }} / ft<sup>2</sup></span>
+                            <label class="grid-l">Paint service</label>
+                            <div class="grid-r">
+                              <InputNumber v-model="paintSqFt" fluid/>
+                            </div>
+                            <span class="subtitle">+ {{ formatCurrency(49) }}</span>
                             <label class="grid-l">Paint</label>
                             <div class="grid-r">
                               <InputGroup>
@@ -867,13 +903,15 @@ const groupedCities = ref([
                                 <InputGroupAddon>ft<sup>2</sup></InputGroupAddon>
                               </InputGroup>
                             </div>
+                            <span class="subtitle">+ {{ formatCurrency(49) }}</span>
                             <label class="grid-l">Plastic</label>
                             <div class="grid-r">
                               <InputGroup>
-                                <InputNumber v-model="plasticSqFt"/>
+                                <InputNumber v-model="plasticSqFt" />
                                 <InputGroupAddon>ft<sup>2</sup></InputGroupAddon>
                               </InputGroup>
                             </div>
+                            <span class="subtitle">+ {{ formatCurrency(49) }}</span>
                           </div>
                         </div>
                       </TabPanel>
@@ -901,6 +939,9 @@ const groupedCities = ref([
 </template>
 
 <style scoped>
+root {
+  --challenges-price-length: 5rem;
+}
 
 .input-width {
   width: 400px;
@@ -923,7 +964,7 @@ const groupedCities = ref([
 
 .checkbox-grid {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: auto 1fr 5rem;
   align-items: center;
   column-gap: 12px;
   row-gap: 4px;
@@ -933,7 +974,7 @@ const groupedCities = ref([
     align-items: center;
   }
 
-  .grid-label {
+  .checkbox-label {
     min-width: 10rem;
     margin: 4px;
     display: flex;
@@ -941,6 +982,11 @@ const groupedCities = ref([
     justify-content: left;
     text-align: left;
     font-size: 16px;
+    color: var(--p-text-muted-color);
+  }
+
+  .checkbox-label-selected {
+    color: var(--p-text-color);
   }
 }
 
@@ -966,35 +1012,25 @@ const groupedCities = ref([
 
 .grid-container {
   display: grid;
-  grid-template-columns: 4.5rem 1fr;
+  grid-template-columns: 4.5rem 1fr 5rem;
   grid-auto-rows: 50px;
   column-gap: 8px;
   width: 100%;
   max-width: 600px;
-
+  align-items: center;
 
   .grid-l {
     margin: 4px;
     display: flex;
-    align-items: center;
     justify-content: right;
     text-align: right;
-    font-size: 13px;
+    font-size: 0.875rem;
   }
 
   .grid-r {
     padding: 4px;
     display: flex;
-    align-items: center;
     justify-content: left;
-    gap: 12px;
-  }
-
-  .grid-r-center {
-    padding: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     gap: 12px;
   }
 }
@@ -1029,7 +1065,8 @@ const groupedCities = ref([
 
 .card-header {
   display: flex;
-  justify-content: flex-start;
+  flex-direction: row;
+  justify-content: space-between;
   margin-bottom: 0.5rem;
 
   .text {
