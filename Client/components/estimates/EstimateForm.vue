@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Component } from "vue"; // STANDARD
+import type { Component, Ref } from "vue"; // STANDARD
 
 import Badge from "primevue/badge"; // LIBRARY
 import Button from "primevue/button";
@@ -341,66 +341,110 @@ function deleteSelected() {
 
 // region ConstructionChallenges
 
-interface Challenge<T extends boolean | number> {
+enum ChallengeType {
+  LayUp,
+  Stock,
+  Concession,
+  Custom
+}
+
+interface Challenge {
   id: number;
   label: string;
-  value: T;
+  type: ChallengeType;
+  price: number;
 }
 
-interface ChallengeToggle extends Challenge<boolean> {
-  addOnPrice: number;
+interface ChallengeToggle extends Challenge {
+  isToggled: boolean;
 }
 
-interface ChallengeTask extends Challenge<number> {
-  unitPrice: number;
+interface ChallengeMaterial extends Challenge {
+  unitAmount: number;
   unit: string;
 }
 
-interface ChallengeList {
-  layUp: number[];
-  stock: number[];
-  concessions: number[];
+interface ChallengeSelection {
+  toggles: ChallengeToggle[];
+  materials: ChallengeMaterial[];
 }
 
-const initialChallenges = {
-  layUp: [],
-  stock: [],
-  concessions: []
+interface ChallengeTab {
+  id: string;
+  label: string;
+  selection: Ref<ChallengeSelection>;
+}
+
+const initSelectedChallenges = (): ChallengeSelection => ({ toggles: [], materials: [] });
+const selectedLayUp = ref<ChallengeSelection>(initSelectedChallenges());
+const selectedStock = ref<ChallengeSelection>(initSelectedChallenges());
+const selectedConcessions = ref<ChallengeSelection>(initSelectedChallenges());
+const selectedCustom = ref<ChallengeSelection>(initSelectedChallenges());
+
+const challengeTabs: Record<ChallengeType, ChallengeTab> = {
+  [ChallengeType.LayUp]: {
+    id: "0",
+    label: "Lay up",
+    selection: selectedLayUp
+  },
+  [ChallengeType.Stock]: {
+    id: "1",
+    label: "Stock",
+    selection: selectedStock
+  },
+  [ChallengeType.Concession]: {
+    id: "2",
+    label: "Concessions",
+    selection: selectedConcessions
+  },
+  [ChallengeType.Custom]: {
+    id: "3",
+    label: "Custom",
+    selection: selectedCustom
+  }
 };
-const selectedChallenges = ref<ChallengeList>(initialChallenges);
+const getChallengeTabs
 
-const layUpChallenges: ChallengeToggle[] = [
-  { id: 1, label: "Inaccessible to lay up", value: true, addOnPrice: 60 },
-  { id: 2, label: "In between trees", value: false, addOnPrice: 30 },
-  { id: 3, label: "8\" block", value: false, addOnPrice: 50 },
-  { id: 4, label: "Wall pattern", value: false, addOnPrice: 40 },
-  { id: 5, label: "Next to pipes", value: false, addOnPrice: 20 },
-  { id: 6, label: "Insurance paid", value: true, addOnPrice: 150 }
-];
+function fetchChallengeToggles(): ChallengeToggle[] {
+  return [
+    { id: 1, label: "Inaccessible to lay up", value: false, price: 60, type: ChallengeType.LayUp },
+    { id: 2, label: "In between trees", value: false, price: 30, type: ChallengeType.LayUp },
+    { id: 3, label: "8\" block", value: false, price: 50, type: ChallengeType.LayUp },
+    { id: 4, label: "Wall pattern", value: false, price: 40, type: ChallengeType.LayUp },
+    { id: 5, label: "Next to pipes", value: false, price: 20, type: ChallengeType.LayUp },
+    { id: 6, label: "Insurance paid", value: false, price: 150, type: ChallengeType.LayUp },
+    { id: 7, label: "Stock changes", value: false, price: 60, type: ChallengeType.Stock },
+    { id: 8, label: "Far from wall", value: true, price: 30, type: ChallengeType.Stock },
+    { id: 9, label: "Outside corner lot", value: false, price: 50, type: ChallengeType.Stock },
+    { id: 10, label: "Cover pool", value: false, price: 40, type: ChallengeType.Stock },
+    { id: 11, label: "Cover landscape", value: false, price: 20, type: ChallengeType.Stock },
+    { id: 12, label: "Cover concrete", value: false, price: 150, type: ChallengeType.Stock },
+    { id: 13, label: "Pump for footing", value: false, price: 60, type: ChallengeType.Concession },
+    { id: 14, label: "Pump for grout", value: false, price: 30, type: ChallengeType.Concession },
+    { id: 15, label: "Gate installation", value: true, price: 50, type: ChallengeType.Concession },
+    { id: 16, label: "Trash removal", value: false, price: 4, type: ChallengeType.Concession }
+  ];
+}
 
-const stockChallenges: ChallengeToggle[] = [
-  { id: 7, label: "Stock changes", value: false, addOnPrice: 60 },
-  { id: 8, label: "Far from wall", value: true, addOnPrice: 30 },
-  { id: 9, label: "Outside corner lot", value: false, addOnPrice: 50 },
-  { id: 10, label: "Cover pool", value: false, addOnPrice: 40 },
-  { id: 11, label: "Cover landscape", value: false, addOnPrice: 20 },
-  { id: 12, label: "Cover concrete", value: false, addOnPrice: 150 }
-];
+function fetchChallengeMaterials(): ChallengeMaterial[] {
+  return [
+    { id: 1, label: "Stucco sq ft", value: 0, price: 60, type: ChallengeType.Custom, unit: "sq ft" },
+    { id: 2, label: "Paint sq ft", value: 0, price: 30, type: ChallengeType.Custom, unit: "sq ft" },
+    { id: 3, label: "Plastic sq ft", value: 0, price: 50, type: ChallengeType.Custom, unit: "sq ft" }
+  ];
+}
 
-const concessions: ChallengeToggle[] = [
-  { id: 13, label: "Pump for footing", value: false, addOnPrice: 60 },
-  { id: 14, label: "Pump for grout", value: false, addOnPrice: 30 },
-  { id: 15, label: "Gate installation", value: true, addOnPrice: 50 },
-  { id: 16, label: "Trash removal", value: false, addOnPrice: 40 }
-];
+function getChallengeToggles(type: ChallengeType): ChallengeToggle[] {
+  return fetchChallengeToggles().filter(challenge => challenge.type === type);
+}
+
+function getChallengeMaterials(type: ChallengeType): ChallengeMaterial[] {
+  return fetchChallengeMaterials().filter(challenge => challenge.type === type);
+}
+
 
 // for each element in above lists, add id to selectedChallenges if challenge value is true
 // do it once, it should not be reactive
-if (selectedChallenges.value.layUp.length === 0) {
-  selectedChallenges.value.layUp = layUpChallenges
-      .filter(challenge => challenge.value)
-      .map(challenge => challenge.id);
-}
 
 
 const stuccoSqFt = ref<number>();
@@ -409,8 +453,8 @@ const plasticSqFt = ref<number>();
 
 const selectedConcessionsAmount = computed<number>(() => {
   let amount = 0;
-  if (selectedChallenges.value.concessions) {
-    amount = selectedChallenges.value.concessions.length;
+  if (selectedConcessions) {
+    amount = selectedConcessions.length;
   }
   if (stuccoSqFt.value) amount++;
   if (paintSqFt.value) amount++;
@@ -651,7 +695,7 @@ const groupedCities = ref([
                   </div>
                 </div>
                 <div class="flex justify-center">
-                  <DataTable  :value="estimateEdit.tasks" rowGroupMode="subheader" groupRowsBy="scope" sortMode="single"
+                  <DataTable :value="estimateEdit.tasks" rowGroupMode="subheader" groupRowsBy="scope" sortMode="single"
                              sortField="scope" :sortOrder="1" editMode="cell" size="small"
                              @cell-edit-complete="onEditJobTaskCell" removableSort v-model:selection="selectedTasks"
                              style="width: 100%"
@@ -804,99 +848,52 @@ const groupedCities = ref([
                   </div>
                   <Tabs v-model:value="challengeTabValue">
                     <TabList ref="tabList">
-                      <Tab value="0">
+                      <Tab v-for="tab in challengeTabs" :value="tab.id">
                         <div class="tab">
-                          <span>Lay up</span>
+                          <span>{{ tab.label }}</span>
                           <Transition @before-enter="triggerTabUpdate" @after-leave="triggerTabUpdate">
-                          <span v-if="selectedChallenges.layUp.length" class="badge"
-                                :class="{ 'badge-inactive': challengeTabValue !== '0' }">
-                            {{ selectedChallenges.layUp.length }}
-                          </span>
-                          </Transition>
-                        </div>
-                      </Tab>
-                      <Tab value="1">
-                        <div class="tab">
-                          <span>Stock</span>
-                          <Transition @before-enter="triggerTabUpdate" @after-leave="triggerTabUpdate">
-                          <span v-if="selectedChallenges.stock.length" class="badge"
-                                :class="{ 'badge-inactive': challengeTabValue !== '1' }">
-                            {{ selectedChallenges.stock.length }}
-                          </span>
-                          </Transition>
-                        </div>
-                      </Tab>
-                      <Tab value="2">
-                        <div class="tab">
-                          <span>Concessions</span>
-                          <Transition @before-enter="triggerTabUpdate" @after-leave="triggerTabUpdate">
-                          <span v-if="selectedConcessionsAmount" class="badge"
-                                :class="{ 'badge-inactive': challengeTabValue !== '2' }">
-                            {{ selectedConcessionsAmount }}
+                          <span v-if="tab.selection.value.length" class="badge"
+                                :class="{ 'badge-inactive': challengeTabValue !== tab.id }">
+                            {{ tab.selection.value.length }}
                           </span>
                           </Transition>
                         </div>
                       </Tab>
                     </TabList>
                     <TabPanels>
-                      <TabPanel value="0" class="min-h-[16rem]">
-                        <div class="checkbox-grid">
-                          <template v-for="challenge in layUpChallenges" :key="String(challenge.id)">
-                            <div class="checkbox">
-                              <Checkbox v-model="selectedChallenges.layUp" :inputId="challenge.id"
-                                        name="layUpChallenge" :value="challenge.id"/>
-                            </div>
-                            <label :for="String(challenge.id)" class="checkbox-label">
-                              {{ challenge.label }}
-                            </label>
-                            <span class="subtitle">+ {{ formatCurrency(challenge.addOnPrice) }}</span>
-                          </template>
-                        </div>
-                      </TabPanel>
-                      <TabPanel value="1" class="min-h-[16rem]">
-                        <div class="checkbox-grid">
-                          <template v-for="challenge in stockChallenges" :key="String(challenge.id)" class="checkbox-grid">
-                            <div class="checkbox">
-                              <Checkbox v-model="selectedChallenges.stock" :inputId="challenge.id"
-                                        name="stockChallenge" :value="challenge.id"/>
-                            </div>
-                            <label :for="String(challenge.id)" class="checkbox-label">
-                              {{ challenge.label }}
-                            </label>
-                            <span class="subtitle">+ {{ formatCurrency(challenge.addOnPrice) }}</span>
-                          </template>
-                        </div>
-                      </TabPanel>
-                      <TabPanel value="2" class="min-h-[16rem]">
+                      <TabPanel v-for="([challengeType, tab]) in Object.entries(challengeTabs)"
+                                :value="tab.id" class="min-h-[16rem]">
                         <div class="flex flex-col">
                           <div class="checkbox-grid">
-                            <template v-for="concession in concessions" :key="String(concession.id)" class="checkbox-grid">
+                            <template v-for="toggleChallenge in getChallengeToggles(ChallengeType.Concession)"
+                                      :key="String(concession.id)" class="checkbox-grid">
                               <div class="checkbox">
-                                <Checkbox v-model="selectedChallenges.concessions" :inputId="concession.id"
+                                <Checkbox v-model="selectedConcessions" :inputId="concession.id"
                                           name="concession" :value="concession.id"/>
                               </div>
-                              <label :for="String(concession.id)" class="checkbox-label" :class="{ 'checkbox-label-selected': selectedChallenges.concessions.includes(concession.id) }">
+                              <label :for="String(concession.id)" class="checkbox-label"
+                                     :class="{ 'checkbox-label-selected': selectedConcessions.includes(concession.id) }">
                                 {{ concession.label }}
                               </label>
-                              <span class="subtitle">+ {{ formatCurrency(concession.addOnPrice) }}</span>
+                              <span class="subtitle">+ {{ formatCurrency(concession.price) }}</span>
                             </template>
                           </div>
-                          <Divider />
+                          <Divider/>
                           <div class="grid-container">
-                            <label class="grid-l">Stucco</label>
+                            <label class="grid-l subtitle">Stucco</label>
                             <div class="grid-r">
                               <InputGroup>
                                 <InputNumber v-model="stuccoSqFt"/>
                                 <InputGroupAddon>ft<sup>2</sup></InputGroupAddon>
                               </InputGroup>
                             </div>
-                            <span class="subtitle">+ {{ formatCurrency(49) }} / ft<sup>2</sup></span>
-                            <label class="grid-l">Paint service</label>
+                            <span class="subtitle">+ {{ formatCurrency(49) }}</span>
+                            <label class="grid-l subtitle">Paint service</label>
                             <div class="grid-r">
                               <InputNumber v-model="paintSqFt" fluid/>
                             </div>
                             <span class="subtitle">+ {{ formatCurrency(49) }}</span>
-                            <label class="grid-l">Paint</label>
+                            <label class="grid-l subtitle">Paint</label>
                             <div class="grid-r">
                               <InputGroup>
                                 <InputNumber v-model="paintSqFt"/>
@@ -904,10 +901,10 @@ const groupedCities = ref([
                               </InputGroup>
                             </div>
                             <span class="subtitle">+ {{ formatCurrency(49) }}</span>
-                            <label class="grid-l">Plastic</label>
+                            <label class="grid-l subtitle">Plastic</label>
                             <div class="grid-r">
                               <InputGroup>
-                                <InputNumber v-model="plasticSqFt" />
+                                <InputNumber v-model="plasticSqFt"/>
                                 <InputGroupAddon>ft<sup>2</sup></InputGroupAddon>
                               </InputGroup>
                             </div>
