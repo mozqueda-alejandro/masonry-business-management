@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import { useTemplateRef } from 'vue';
+
 import Button from "primevue/button";
-import DataTable from "primevue/datatable";
-import Column from "primevue/column";
-import DatePicker from "primevue/datepicker";
+import { Bar } from "vue-chartjs";
+import { Line } from 'vue-chartjs'
 
 const { isNotificationsSlideoverOpen } = useDashboard()
 
@@ -37,6 +38,25 @@ let state = {
 const store = useDarkModeStore();
 const { isDark } = storeToRefs(store);
 
+watch(isDark, (value) => {
+
+});
+
+const data = {
+  labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
+  datasets: [
+    {
+      label: 'Data One',
+      data: [40, 39, 10, 40, 39, 80, 40],
+    }
+  ]
+}
+
+const options = {
+  responsive: true,
+  maintainAspectRatio: false
+}
+
 </script>
 
 <template>
@@ -59,20 +79,9 @@ const { isDark } = storeToRefs(store);
       </UDashboardNavbar>
 
       <UDashboardPanelContent>
-        <div class="card m-8">
-          <DataTable scrollable scrollHeight="200px" tableStyle="min-width: 60rem" :value=state.products>
-            <Column field="code" header="Code"></Column>
-            <Column field="name" header="Name"></Column>
-            <Column field="category" header="Category"></Column>
-            <Column field="quantity" header="Quantity"></Column>
-          </DataTable>
-        </div>
+          <Line :data="data" :options="options"/>
 
-        <Button label="Toggle theme" rounded @click="isDark = !isDark"/>
-        <Button label="Link" link />
-
-        <DatePicker></DatePicker>
-
+          <Button label="Toggle Theme" @click="isDark = !isDark"/>
       </UDashboardPanelContent>
     </UDashboardPanel>
   </UDashboardPage>

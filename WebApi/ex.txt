@@ -1,0 +1,14 @@
+﻿RATES TABLE
+id   |   Delivery   |   Block    |    Concrete
+
+0    |   1.00       |   1.00     |    1.00
+1    |   1.50       |   1.50     |    1.50
+
+
+ESTIMATES TABLE
+
+id   |   Name   |   Jobs   |   RateId
+
+0    |   John   |   1      |    0
+1    |   Doe    |   2      |    0
+2    |   Jane   |   3      |    1

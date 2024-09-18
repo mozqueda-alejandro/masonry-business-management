@@ -69,41 +69,13 @@ public enum FootingType
     Excentric
 }
 
-public interface IBlock
+public interface IBlock : IWeighable
 {
     int Width { get; set; }
     string Color { get; set; }
+    string Type { get; set; }
 }
 
-public enum BlockType
-{
-    SlumpStone,
-    Smooth,
-    SplitFace
-}
-
-public class Block : IBlock
-{
-    public BlockType Type { get; set; }
-    public int Width { get; set; }
-    public string Color { get; set; }
-}
-
-public enum SpecialBlockType
-{
-    CornerFlute,
-    CornerSplit,
-    Flute,
-    Netlis,
-    Split
-}
-
-public class SpecialBlock : IBlock
-{
-    public SpecialBlockType Type { get; set; }
-    public int Width { get; set; }
-    public string Color { get; set; }
-}
 
 public class JobTask
 {
@@ -129,11 +101,11 @@ public class Installation : JobTask
     public WallRepairPattern WallRepairPattern { get; set; }
 
     // Block Specifications
-    public Block Block { get; set; }
+    public IBlock Block { get; set; }
     public string PremixColor { get; set; }
 
     // Special Block Specifications
-    public SpecialBlock SpecialBlock { get; set; }
+    public IBlock SpecialBlock { get; set; }
     public string SpecialBlockCourses { get; set; }
     public int SpecialBlockAmount { get; set; }
 

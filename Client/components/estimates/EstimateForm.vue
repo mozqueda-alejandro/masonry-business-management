@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Component, Ref } from "vue"; // STANDARD
+import type { Component } from "vue"; // STANDARD
 
 import Badge from "primevue/badge"; // LIBRARY
 import Button from "primevue/button";
@@ -23,7 +23,6 @@ import ProgressBar from "primevue/progressbar";
 import Select from "primevue/select";
 import SplitButton from "primevue/splitbutton";
 import TextArea from "primevue/textarea";
-
 
 import Tabs from "primevue/tabs";
 import TabList from "primevue/tablist";
@@ -130,13 +129,13 @@ if (!estimateEdit.value.date) {
 }
 
 const tempDate = estimateEdit.value.date;
-if (estimateEdit.value.usingValidUntil) {
-  estimateEdit.value.validUntil = new Date(
+let _cachedValidUntil = estimateEdit.value.validUntil;
+if (!estimateEdit.value.usingValidUntil) {
+  _cachedValidUntil = new Date(
       tempDate.getFullYear(),
       tempDate.getMonth(),
       tempDate.getDate() + 30);
 }
-let _cachedValidUntil = estimateEdit.value.validUntil;
 
 watch(() => estimateEdit.value.usingValidUntil, (newValue) => {
   if (newValue) {
@@ -147,10 +146,16 @@ watch(() => estimateEdit.value.usingValidUntil, (newValue) => {
   }
 });
 
-
 const dateDifference = computed(() => {
   if (!estimateEdit.value.usingValidUntil || !estimateEdit.value.validUntil || !estimateEdit.value.date) {
     return "No expiration date";
+  }
+  if (estimateEdit.value.validUntil.getTime() < estimateEdit.value.date.getTime()) {
+    return "Invalid expiration date";
+  }
+  const currentDay = new Date();
+  if (estimateEdit.value.validUntil.getTime() < currentDay.getTime()) {
+    return "Expired";
   }
 
   const diff = estimateEdit.value.validUntil.getTime() - estimateEdit.value.date.getTime();
@@ -336,125 +341,91 @@ function deleteSelected() {
 
 // endregion
 
-// region ConstructionChallenges
+// region ConstructionConditions
 
-enum ChallengeType {
+enum ConditionType {
   LayUp = "layUp",
   Stock = "stock",
   Concession = "concession",
   Custom = "custom"
 }
 
-// T can only be "toggle" or "material"
-interface Challenge {
+interface JobCondition {
   id: number;
   label: string;
-  type: ChallengeType;
+  type: ConditionType;
   price: number;
 }
 
-interface ChallengeToggle extends Challenge {
+interface JobConditionToggle extends JobCondition {
   isToggled: boolean;
 }
 
-interface ChallengeMaterial extends Challenge {
-  unitAmount: number;
-  unit: string;
-}
-
-interface ChallengeSelection {
+interface JobConditionSelection {
   toggles: number[];
-  materials: number[];
 }
 
-interface ChallengeTab {
+interface JobConditionTab {
   id: string;
   label: string;
 }
 
-const initChallengeSelection = (): ChallengeSelection => ({ toggles: [], materials: [] });
-const selectedChallenges = reactive(
-    Object.values(ChallengeType).reduce((selections, type) => {
-      selections[type] = initChallengeSelection();
+const initConditionSelection = (): JobConditionSelection => ({ toggles: [] });
+const selectedConditions = reactive(
+    Object.values(ConditionType).reduce((selections, type) => {
+      selections[type] = initConditionSelection();
       return selections;
-    }, {} as Record<ChallengeType, ChallengeSelection>)
+    }, {} as Record<ConditionType, JobConditionSelection>)
 );
 
-
-
-function getChallengeTabEntries(): [ChallengeType, ChallengeTab][] {
-  const challengeTabs: Record<ChallengeType, ChallengeTab> = {
-    [ChallengeType.LayUp]: { id: "0", label: "Lay up" },
-    [ChallengeType.Stock]: { id: "1", label: "Stock" },
-    [ChallengeType.Concession]: { id: "2", label: "Concessions" },
-    [ChallengeType.Custom]: { id: "3", label: "Custom" }
+function getConditionTabEntries(): [ConditionType, JobConditionTab][] {
+  const conditionTabs: Record<ConditionType, JobConditionTab> = {
+    [ConditionType.LayUp]: { id: "0", label: "Lay up" },
+    [ConditionType.Stock]: { id: "1", label: "Stock" },
+    [ConditionType.Concession]: { id: "2", label: "Concession" },
+    [ConditionType.Custom]: { id: "3", label: "Custom" }
   };
-  return Object.entries(challengeTabs) as [ChallengeType, ChallengeTab][];
+  return Object.entries(conditionTabs) as [ConditionType, JobConditionTab][];
 }
 
-function fetchChallengeToggles(): ChallengeToggle[] {
-  const toggles = [
-    { id: 1, label: "Inaccessible to lay up", isToggled: false, price: 60, type: ChallengeType.LayUp },
-    { id: 2, label: "In between trees", isToggled: false, price: 30, type: ChallengeType.LayUp },
-    { id: 3, label: "8\" block", isToggled: false, price: 50, type: ChallengeType.LayUp },
-    { id: 4, label: "Wall pattern", isToggled: false, price: 40, type: ChallengeType.LayUp },
-    { id: 5, label: "Next to pipes", isToggled: false, price: 20, type: ChallengeType.LayUp },
-    { id: 6, label: "Insurance paid", isToggled: false, price: 150, type: ChallengeType.LayUp },
-    { id: 7, label: "Stock changes", isToggled: false, price: 60, type: ChallengeType.Stock },
-    { id: 8, label: "Far from wall", isToggled: true, price: 30, type: ChallengeType.Stock },
-    { id: 9, label: "Outside corner lot", isToggled: false, price: 50, type: ChallengeType.Stock },
-    { id: 10, label: "Cover pool", isToggled: false, price: 40, type: ChallengeType.Stock },
-    { id: 11, label: "Cover landscape", isToggled: false, price: 20, type: ChallengeType.Stock },
-    { id: 12, label: "Cover concrete", isToggled: false, price: 150, type: ChallengeType.Stock },
-    { id: 13, label: "Pump for footing", isToggled: false, price: 60, type: ChallengeType.Concession },
-    { id: 14, label: "Pump for grout", isToggled: false, price: 30, type: ChallengeType.Concession },
-    { id: 15, label: "Gate installation", isToggled: true, price: 50, type: ChallengeType.Concession },
-    { id: 16, label: "Trash removal", isToggled: false, price: 4, type: ChallengeType.Concession }
+function fetchConditionToggles(): JobConditionToggle[] {
+  return [
+    { id: 1, label: "Inaccessible to lay up", isToggled: false, price: 60, type: ConditionType.LayUp },
+    { id: 2, label: "In between trees", isToggled: false, price: 30, type: ConditionType.LayUp },
+    { id: 3, label: "8\" block", isToggled: false, price: 50, type: ConditionType.LayUp },
+    { id: 4, label: "Wall pattern", isToggled: false, price: 40, type: ConditionType.LayUp },
+    { id: 5, label: "Next to tubing", isToggled: false, price: 20, type: ConditionType.LayUp },
+    { id: 6, label: "Insurance paid", isToggled: false, price: 150, type: ConditionType.LayUp },
+    { id: 7, label: "Stock changes", isToggled: false, price: 60, type: ConditionType.Stock },
+    { id: 8, label: "Far from wall", isToggled: true, price: 30, type: ConditionType.Stock },
+    { id: 9, label: "Outside corner lot", isToggled: false, price: 50, type: ConditionType.Stock },
+    { id: 10, label: "Cover pool", isToggled: false, price: 40, type: ConditionType.Stock },
+    { id: 11, label: "Cover landscape", isToggled: false, price: 20, type: ConditionType.Stock },
+    { id: 12, label: "Cover concrete", isToggled: false, price: 150, type: ConditionType.Stock },
+    { id: 13, label: "Pump for footing", isToggled: false, price: 60, type: ConditionType.Concession },
+    { id: 14, label: "Pump for grout", isToggled: false, price: 30, type: ConditionType.Concession },
+    { id: 15, label: "Gate installation", isToggled: true, price: 50, type: ConditionType.Concession },
+    { id: 16, label: "Trash removal", isToggled: false, price: 4, type: ConditionType.Concession }
   ];
-  // return toggles.map(toggle => ({
-  //   ...toggle, kind: "toggle"
-  // }));
-  return toggles;
 }
 
-function fetchChallengeMaterials(): ChallengeMaterial[] {
-  const materials = [
-    { id: 0, label: "Stucco", unitAmount: 0, price: 60, type: ChallengeType.Concession, unit: "sq ft" },
-    { id: 2, label: "Paint", unitAmount: 0, price: 30, type: ChallengeType.Concession, unit: "sq ft" },
-    { id: 3, label: "Plastic", unitAmount: 0, price: 50, type: ChallengeType.Concession, unit: "sq ft" },
-    { id: 4, label: "Stucco", unitAmount: 0, price: 60, type: ChallengeType.Custom, unit: "sq ft" },
-    { id: 5, label: "Paint", unitAmount: 0, price: 30, type: ChallengeType.Custom, unit: "sq ft" },
-    { id: 6, label: "Plastic", unitAmount: 0, price: 50, type: ChallengeType.Custom, unit: "sq ft" }
-  ];
-  return materials;
+const conditionToggles = ref<JobCondition[]>(fetchConditionToggles());
+
+function filterConditionToggles(data: JobCondition[], type: ConditionType): JobCondition[] {
+  return data.filter(condition => condition.type === type);
 }
 
-const challengeToggles = ref<ChallengeToggle[]>(fetchChallengeToggles());
-const challengeMaterials = ref<ChallengeMaterial[]>(fetchChallengeMaterials());
-
-function filterChallengeToggles(data: ChallengeToggle[], type: ChallengeType): ChallengeToggle[] {
-  return data.filter(challenge => challenge.type === type);
-}
-
-function filterChallengeMaterials(data: ChallengeMaterial[], type: ChallengeType): ChallengeMaterial[] {
-  return data.filter(challenge => challenge.type === type);
-}
-
-filterChallengeMaterials(challengeMaterials.value, ChallengeType.Concession).forEach(item => {
-  selectedChallenges.concession.materials[item.id] = item.price;
-});
-
-function getActiveChallengesAmount(type: ChallengeType): number {
+function getActiveConditionsAmount(type: ConditionType): number {
   let totalActive = 0;
-  totalActive += selectedChallenges[type].toggles.filter(challenge => challenge).length;
-  totalActive += selectedChallenges[type].materials.filter(challenge => challenge).length;
+  totalActive += selectedConditions[type].toggles.filter(condition => condition).length;
   return totalActive;
 }
 
-const challengeTabValue = ref("0");
+const conditionTabValue = ref("0");
+const newConditionModalVisible = ref(false);
 
-// UI
 const tabList = ref<InstanceType<typeof TabList>>();
+
 async function triggerTabUpdate() {
   await nextTick();
   tabList.value?.updateInkBar();
@@ -474,7 +445,7 @@ const footer = ref("");
 
 import { initialState } from "~/types/constants";
 
-function calculateCompletionRatio<T>(filledObj: Partial<T>, defaultObj: any, excludeFields: (keyof T)[] = []): number {
+function calculateCompletionRatio(filledObj: any): number {
   // const keys = Object.keys(defaultObj) as (keyof T)[];
   // const relevantKeys = keys.filter(key => !excludeFields.includes(key));
   // const totalFields = relevantKeys.length;
@@ -538,6 +509,7 @@ const groupedCities = ref([
             </div>
             <div class="flex flex-row gap-4">
               <Button label="Discard" outlined @click="navigateTo('/estimates')"/>
+              <Button label="Preview" outlined/>
               <Button label="Import" icon="pi pi-file-import" outlined
                       @click="importModalVisible = true"/>
               <SplitButton label="Save and continue" :model="saveButtonItems"
@@ -713,7 +685,8 @@ const groupedCities = ref([
                           </Transition>
                           <Button label="Delete" severity="secondary" :disabled="!canDeleteSelection"
                                   @click="deleteSelected"/>
-                          <Button label="Add task" icon="pi pi-plus" @click="newTaskModalVisible = true"/>
+                          <Button label="Add task" icon="pi pi-plus" severity="success" text
+                                  @click="newTaskModalVisible = true"/>
                           <Dialog v-model:visible="newTaskModalVisible" modal header="New job task"
                                   :draggable="false" :style="{ width: '40rem', height: '28rem'}">
                             <div class="flex flex-row">
@@ -781,7 +754,6 @@ const groupedCities = ref([
                         </div>
                         <ProgressBar v-else :value="calculateCompletionRatio(data)" :showValue="false"
                                      pt:root:style="height: 0.25rem"/>
-
                       </template>
                     </Column>
                     <Column style="width: 4rem">
@@ -814,9 +786,9 @@ const groupedCities = ref([
                         <span class="font-normal sub-description mr-8">Subtotal</span>
                         <div class="flex flex-col justify-end mr-[3rem]">
                           <span class="font-bold">${{ getTaskGroupTotalPrice(data.scope) }}</span>
-                          <span class="sub-description font-light text-xs">${{
-                              getTaskGroupTotalPrice(data.scope)
-                            }}</span>
+                          <span class="sub-description font-light text-xs">
+                            ${{ getTaskGroupTotalPrice(data.scope) }}
+                          </span>
                         </div>
                       </div>
                     </template>
@@ -837,18 +809,18 @@ const groupedCities = ref([
               <div class="flex flex-row justify-between items-stretch gap-4">
                 <div class="flex flex-col flex-1">
                   <div class="card-header">
-                    <span class="text">Construction Challenges</span>
+                    <span class="text">Job Conditions</span>
                   </div>
-                  <Tabs v-model:value="challengeTabValue">
+                  <Tabs v-model:value="conditionTabValue">
                     <TabList ref="tabList">
-                      <Tab v-for="([type, tab]) in getChallengeTabEntries()"
+                      <Tab v-for="([type, tab]) in getConditionTabEntries()"
                            :value="tab.id">
                         <div class="tab">
                           <span>{{ tab.label }}</span>
                           <Transition @before-enter="triggerTabUpdate" @after-leave="triggerTabUpdate">
-                          <span v-if="getActiveChallengesAmount(type)" class="badge"
-                                :class="{ 'badge-inactive': challengeTabValue !== tab.id }">
-                            {{ getActiveChallengesAmount(type) }}
+                          <span v-if="getActiveConditionsAmount(type)" class="badge"
+                                :class="{ 'badge-inactive': conditionTabValue !== tab.id }">
+                            {{ getActiveConditionsAmount(type) }}
                           </span>
                           </Transition>
                         </div>
@@ -856,42 +828,50 @@ const groupedCities = ref([
                     </TabList>
                     <TabPanels>
                       <TabPanel
-                          v-for="([type, tab]) in getChallengeTabEntries()"
+                          v-for="([type, tab]) in getConditionTabEntries()"
                           :value="tab.id" class="min-h-[16rem]">
                         <div class="flex flex-col">
                           <div class="checkbox-grid">
-                            <template v-for="toggle in filterChallengeToggles(challengeToggles, type)"
-                                      :key="toggle.id" class="checkbox-grid">
+                            <template class="contents">
+                              <span/>
+                              <span class="text-sm font-bold subtitle">Conditions</span>
+                              <span class="font-bold subtitle">Rates</span>
+                            </template>
+                            <template v-for="toggle in filterConditionToggles(conditionToggles, type)"
+                                      :key="toggle.id" class="contents"
+                                      v-if="filterConditionToggles(conditionToggles, type).length">
                               <div class="checkbox">
-                                <Checkbox v-model="selectedChallenges[type].toggles" :inputId="String(toggle.id)"
+                                <Checkbox v-model="selectedConditions[type].toggles" :inputId="String(toggle.id)"
                                           :name="type" :value="toggle.id"/>
                               </div>
                               <label :for="String(toggle.id)" class="checkbox-label"
-                                     :class="{ 'checkbox-label-selected': selectedChallenges[type].toggles.includes(toggle.id) }">
+                                     :class="{ 'checkbox-label-selected': selectedConditions[type].toggles.includes(toggle.id) }">
                                 {{ toggle.label }}
                               </label>
                               <span class="subtitle">+ {{ formatCurrency(toggle.price) }}</span>
                             </template>
                           </div>
-                          <Divider v-if="filterChallengeToggles(challengeToggles, type).length"/>
-                          <div class="grid-container">
-                            <template v-for="material in filterChallengeMaterials(challengeMaterials, type)">
-                              <label class="grid-l muted-color"
-                                     :class="{ 'primary-color': isNumber(selectedChallenges[type].materials[material.id]) }">
-                                {{ material.label }}
-                              </label>
-                              <div class="grid-r">
-                                <InputGroup>
-                                  <InputNumber v-model="selectedChallenges[type].materials[material.id]"
-                                  @update:modelValue="(newUnitAmount) => selectedChallenges[type].materials[material.id] = newUnitAmount"/>
-                                  <InputGroupAddon>{{ material.unit }}</InputGroupAddon>
-                                </InputGroup>
-                              </div>
-                              <span class="muted-color">
-                                + {{ formatCurrency(material.price) }}/{{ material.unit }}
-                              </span>
-                            </template>
-                          </div>
+                          <template v-if="!filterConditionToggles(conditionToggles, type).length">
+                            <div class="flex flex-col items-center justify-center gap-2 h-20">
+                              <span class="sub-description">No conditions added</span>
+                            </div>
+                          </template>
+                          <Button :label="`Add ${ tab.label }`" @click="newConditionModalVisible = true"
+                                  severity="success"
+                                  text icon="pi pi-plus" class="mt-2" pt:root:class="!py-1"/>
+                          <Dialog v-model:visible="newConditionModalVisible" modal header="Edit Profile"
+                                  :style="{ width: '25rem' }">
+                            <span class="text-surface-500 dark:text-surface-400 block mb-8">Add a new condition.</span>
+                            <div class="flex items-center gap-4 mb-4">
+                              <label for="condition-name" class="font-semibold w-24">Condition Name</label>
+                              <InputText id="condition-name" class="flex-auto" autocomplete="off"/>
+                            </div>
+                            <div class="flex justify-end gap-2">
+                              <Button type="button" label="Cancel" severity="secondary"></Button>
+                              <Button type="button" label="Save"></Button>
+                            </div>
+                          </Dialog>
+                          <Divider v-if="filterConditionToggles(conditionToggles, type).length"/>
                         </div>
                       </TabPanel>
                     </TabPanels>
@@ -910,12 +890,16 @@ const groupedCities = ref([
 
           <Panel header="Footer" toggleable :collapsed="true">
             <div class="flex flex-col gap-4">
-              <TextArea v-model="footer" rows="5" cols="30" fluid></TextArea>
+              <TextArea v-model="footer" autoResize rows="5" cols="30"></TextArea>
               <div class="flex flex-row-reverse">
-                <Button label="Clear"  outlined @click="footer = ''" />
+                <Button label="Clear" outlined @click="footer = ''"/>
               </div>
             </div>
           </Panel>
+
+          <div class="flex flex-row">
+
+          </div>
 
         </div>
       </UDashboardPanelContent>
@@ -925,7 +909,7 @@ const groupedCities = ref([
 
 <style scoped>
 root {
-  --challenges-price-length: 5rem;
+  --conditions-price-length: 5rem;
 }
 
 .input-width {
@@ -949,10 +933,10 @@ root {
 
 .checkbox-grid {
   display: grid;
-  grid-template-columns: auto 1fr 8rem;
+  grid-template-columns: 1.25rem 1fr 6rem;
   align-items: center;
-  column-gap: 12px;
-  row-gap: 4px;
+  column-gap: 1rem;
+  row-gap: 0.25rem;
 
   .checkbox {
     display: flex;
@@ -961,7 +945,7 @@ root {
 
   .checkbox-label {
     min-width: 10rem;
-    margin: 4px;
+    margin: 0.25rem 0.25rem 0.25rem 0;
     display: flex;
     align-items: center;
     justify-content: left;
@@ -1023,6 +1007,7 @@ root {
 .muted-color {
   color: var(--p-text-muted-color);
 }
+
 .primary-color {
   color: var(--p-text-color);
 }
